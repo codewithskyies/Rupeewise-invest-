@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>/* RupeeWise Dark Mode — no-flash */(function(){try{var d=localStorage.getItem('rw_dark_mode'),p=window.matchMedia('(prefers-color-scheme:dark)').matches;if(d==='true'||(d===null&&p))document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Sign In — RupeeWise</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    /* ── AUTH-SPECIFIC STYLES ─────────────────────────────── */
+    .auth-root {
+      min-height: calc(100vh - var(--nav-h));
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    @media(max-width:768px){ .auth-root{grid-template-columns:1fr} .auth-panel{display:none!important} }
+
+    /* Left decorative panel */
+    .auth-panel {
+      background: linear-gradient(145deg, #0f172a 0%, #1e3a2e 50%, #0f172a 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 48px; position: relative; overflow: hidden;
+    }
+    .auth-panel::before {
+      content:''; position:absolute; top:-80px; right:-80px;
+      width:320px; height:320px; background:radial-gradient(circle, rgba(34,197,94,.25) 0%, transparent 70%);
+      border-radius:50%;
+    }
+    .auth-panel::after {
+      content:''; position:absolute; bottom:-60px; left:-60px;
+      width:240px; height:240px; background:radial-gradient(circle, rgba(20,184,166,.2) 0%, transparent 70%);
+      border-radius:50%;
+    }
+    .panel-logo { display:flex; align-items:center; gap:10px; margin-bottom:40px; }
+    .panel-logo-icon {
+      width:44px; height:44px; background:var(--green); border-radius:13px;
+      display:flex; align-items:center; justify-content:center;
+      box-shadow:0 4px 18px rgba(34,197,94,.5);
+    }
+    .panel-logo-icon svg { width:22px; height:22px; }
+    .panel-logo-text { font-family:var(--font-display); font-size:1.4rem; font-weight:800; color:#fff; }
+    .panel-headline { font-family:var(--font-display); font-size:2rem; font-weight:800; color:#fff; line-height:1.2; text-align:center; margin-bottom:12px; }
+    .panel-sub { color:rgba(255,255,255,.55); text-align:center; font-size:.9rem; line-height:1.7; max-width:320px; margin-bottom:40px; }
+    .panel-stats { display:flex; flex-direction:column; gap:14px; width:100%; max-width:300px; }
+    .panel-stat {
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+      border-radius:14px; padding:14px 18px; display:flex; align-items:center; gap:12px;
+      backdrop-filter:blur(8px);
+    }
+    .panel-stat-icon { font-size:1.4rem; }
+    .panel-stat-label { font-size:.72rem; color:rgba(255,255,255,.45); margin-bottom:2px; }
+    .panel-stat-value { font-family:var(--font-display); font-weight:700; color:#fff; font-size:1.05rem; }
+    .panel-stat-change { font-size:.72rem; color:var(--green); margin-left:auto; font-weight:700; }
+
+    /* Right form panel */
+    .auth-form-wrap {
+      display:flex; align-items:center; justify-content:center; padding:32px 24px;
+      background:var(--bg-card);
+    }
+    .auth-card { width:100%; max-width:420px; }
+    .auth-logo-mobile {
+      display:none; align-items:center; gap:8px; margin-bottom:24px;
+      font-family:var(--font-display); font-weight:800; font-size:1.1rem;
+    }
+    @media(max-width:768px){ .auth-logo-mobile{display:flex} }
+    .auth-logo-mobile-icon {
+      width:32px; height:32px; background:var(--green); border-radius:9px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .auth-logo-mobile-icon svg{ width:16px; height:16px; }
+    .auth-title    { font-size:1.6rem; margin-bottom:4px; }
+    .auth-subtitle { color:var(--text-secondary); font-size:.875rem; margin-bottom:28px; }
+
+    /* Demo accounts strip */
+    .demo-strip {
+      background:linear-gradient(135deg,var(--green-bg),#eff6ff);
+      border:1px solid var(--green-border); border-radius:14px;
+      padding:14px 16px; margin-bottom:24px;
+    }
+    .demo-strip-title { font-size:.72rem; font-weight:700; color:var(--green-dark); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; }
+    .demo-accounts { display:flex; flex-direction:column; gap:7px; }
+    .demo-account-btn {
+      display:flex; align-items:center; gap:10px; padding:9px 12px;
+      background:var(--white); border:1px solid var(--green-border);
+      border-radius:10px; cursor:pointer; text-align:left; transition:all .18s; width:100%;
+      font-family:var(--font-body);
+    }
+    .demo-account-btn:hover { background:var(--green-bg); transform:translateX(3px); }
+    .demo-account-avatar { width:28px; height:28px; font-size:1rem; display:flex; align-items:center; justify-content:center; }
+    .demo-account-info { flex:1; }
+    .demo-account-name  { font-size:.82rem; font-weight:700; color:var(--text-primary); }
+    .demo-account-email { font-size:.72rem; color:var(--text-muted); }
+    .demo-account-tag { font-size:.65rem; font-weight:700; padding:2px 7px; border-radius:5px; background:var(--green-bg); color:var(--green-dark); }
+
+    /* Form styles */
+    .form-group   { margin-bottom:16px; }
+    .form-label   { font-size:.8rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px; }
+    .form-input   { 
+      width:100%; font-family:var(--font-body); font-size:.875rem; padding:11px 14px;
+      background:var(--bg); border:1.5px solid var(--border); border-radius:var(--radius);
+      color:var(--text-primary); outline:none; transition:border .18s,box-shadow .18s;
+    }
+    .form-input:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(34,197,94,.1); }
+    .form-input.error { border-color:var(--red); box-shadow:0 0 0 3px rgba(239,68,68,.1); }
+    .input-icon-wrap { position:relative; }
+    .input-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:.9rem; pointer-events:none; }
+    .input-icon-wrap .form-input { padding-left:36px; }
+    .pw-toggle { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:.85rem; padding:2px; }
+
+    /* Error banner */
+    .error-banner {
+      background:var(--red-bg); border:1px solid var(--red-border); border-radius:10px;
+      padding:10px 14px; margin-bottom:16px; font-size:.85rem; color:var(--red);
+      display:flex; align-items:center; gap:8px;
+    }
+
+    /* Divider */
+    .auth-divider { text-align:center; color:var(--text-muted); font-size:.78rem; margin:16px 0; position:relative; }
+    .auth-divider::before,.auth-divider::after { content:''; position:absolute; top:50%; width:calc(50% - 28px); height:1px; background:var(--border); }
+    .auth-divider::before{left:0}.auth-divider::after{right:0}
+    .auth-switch { text-align:center; margin-top:20px; font-size:.85rem; color:var(--text-secondary); }
+    .auth-switch a,.auth-switch button { color:var(--green-dark); font-weight:700; background:none; border:none; cursor:pointer; font-family:var(--font-body); font-size:.85rem; }
+
+    [data-theme="dark"] .auth-form-wrap { background:var(--bg); }
+    [data-theme="dark"] .demo-account-btn { background:var(--bg-hover); }
+  </style>
+</head>
+<body>
+<!-- ═══ NAVBAR ════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      </div>
+      RupeeWise
+    </a>
+    <div class="nav-links">
+      <a href="index.html"  class="nav-link" data-page="index.html">Home</a>
+      <a href="stocks.html" class="nav-link" data-page="stocks.html">📈 Stocks</a>
+      <a href="learn.html"  class="nav-link" data-page="learn.html">🎓 Learn</a>
+      <a href="expense.html" class="nav-link" data-page="expense.html">💸 Expense</a>
+      <a href="trading.html" class="nav-link" data-page="trading.html">🎮 Trade</a>
+    </div>
+    <div class="nav-actions">
+      <button class="dark-toggle" onclick="toggleDarkMode()">🌙</button>
+      <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">☰</button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html" class="nav-link">🏠 Home</a>
+    <a href="stocks.html" class="nav-link">📈 Stocks</a>
+    <a href="learn.html" class="nav-link">🎓 Learn</a>
+  </div>
+</nav>
+
+<!-- ═══ AUTH ROOT ══════════════════════════════════════════ -->
+<div class="auth-root">
+
+  <!-- ── LEFT PANEL ── -->
+  <div class="auth-panel">
+    <div class="panel-logo">
+      <div class="panel-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      </div>
+      <span class="panel-logo-text">RupeeWise</span>
+    </div>
+    <h2 class="panel-headline">Build Wealth<br>Without Confusion</h2>
+    <p class="panel-sub">Join 10,000+ Indians who invest smarter with real-time stocks, SIP management, and finance education.</p>
+    <div class="panel-stats">
+      <div class="panel-stat">
+        <div class="panel-stat-icon">📈</div>
+        <div>
+          <div class="panel-stat-label">NIFTY 50 Today</div>
+          <div class="panel-stat-value" id="panel-nifty">22,540.80</div>
+        </div>
+        <div class="panel-stat-change" id="panel-nifty-chg">+0.57%</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-icon">💼</div>
+        <div>
+          <div class="panel-stat-label">Avg User Portfolio</div>
+          <div class="panel-stat-value">₹3.2L</div>
+        </div>
+        <div class="panel-stat-change">+12.5%</div>
+      </div>
+      <div class="panel-stat">
+        <div class="panel-stat-icon">🎓</div>
+        <div>
+          <div class="panel-stat-label">Quiz Questions</div>
+          <div class="panel-stat-value">60+ Topics</div>
+        </div>
+        <div class="panel-stat-change">Free</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT FORM ── -->
+  <div class="auth-form-wrap">
+    <div class="auth-card fade-up">
+
+      <!-- Mobile logo -->
+      <div class="auth-logo-mobile">
+        <div class="auth-logo-mobile-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </div>
+        RupeeWise
+      </div>
+
+      <h2 class="auth-title">Welcome back 👋</h2>
+      <p class="auth-subtitle">Sign in to your RupeeWise account</p>
+
+      <!-- Demo accounts -->
+      <div class="demo-strip">
+        <div class="demo-strip-title">⚡ Quick Demo Login</div>
+        <div class="demo-accounts" id="demo-accounts-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <div class="auth-divider">or sign in with your account</div>
+
+      <!-- Error banner -->
+      <div class="error-banner hide" id="login-error">
+        <span>❌</span><span id="login-error-text"></span>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" onsubmit="doLogin(event)">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">✉️</span>
+            <input type="email" id="login-email" class="form-input" placeholder="you@example.com" required autocomplete="email"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-icon-wrap" style="position:relative">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="login-password" class="form-input" placeholder="••••••••" required autocomplete="current-password"/>
+            <button type="button" class="pw-toggle" onclick="togglePw('login-password',this)">👁</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:16px">
+          <button type="button" class="btn btn-ghost" style="font-size:.78rem;padding:4px 8px;border-radius:6px">Forgot password?</button>
+        </div>
+        <button type="submit" class="btn btn-primary w-full" style="padding:13px;font-size:1rem;border-radius:12px" id="login-btn">
+          Sign In →
+        </button>
+      </form>
+
+      <div class="auth-switch">
+        Don't have an account? <a href="register.html">Create one free</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="script.js"></script>
+<script src="api.js"></script>
+<script src="auth.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Redirect if already logged in
+  if (Auth.isLoggedIn()) { window.location.href = 'dashboard.html'; return; }
+
+  // Render demo account buttons
+  const demos = Auth.getDemoAccounts();
+  document.getElementById('demo-accounts-list').innerHTML = demos.map(d => `
+    <button class="demo-account-btn" onclick="fillDemo('${d.email}','${d.password}')">
+      <div class="demo-account-avatar">${d.avatar}</div>
+      <div class="demo-account-info">
+        <div class="demo-account-name">${d.name}</div>
+        <div class="demo-account-email">${d.email}</div>
+      </div>
+      <span class="demo-account-tag">Demo</span>
+    </button>`).join('');
+
+  // Animate nifty
+  StockAPI.init().then(() => {
+    const idx = StockAPI.getNiftyIndex();
+    const el  = document.getElementById('panel-nifty');
+    const ce  = document.getElementById('panel-nifty-chg');
+    if (el) el.textContent = formatINR(idx.value);
+    if (ce) {
+      ce.textContent  = (idx.changePct >= 0 ? '+' : '') + idx.changePct.toFixed(2) + '%';
+      ce.style.color  = idx.changePct >= 0 ? 'var(--green)' : '#ef4444';
+    }
+  });
+});
+
+function fillDemo(email, password) {
+  document.getElementById('login-email').value    = email;
+  document.getElementById('login-password').value = password;
+  toast('Demo credentials filled — click Sign In!', 'info');
+}
+
+function doLogin(e) {
+  e.preventDefault();
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  const errText  = document.getElementById('login-error-text');
+  const btn      = document.getElementById('login-btn');
+
+  errEl.classList.add('hide');
+  btn.textContent = 'Signing in…';
+  btn.disabled    = true;
+
+  setTimeout(() => {
+    const result = Auth.login({ email, password });
+    if (result.ok) {
+      toast(`Welcome back, ${result.user.name.split(' ')[0]}! 👋`, 'success');
+      setTimeout(() => window.location.href = 'dashboard.html', 600);
+    } else {
+      errText.textContent = result.error;
+      errEl.classList.remove('hide');
+      btn.textContent = 'Sign In →';
+      btn.disabled    = false;
+    }
+  }, 400);
+}
+
+function togglePw(id, btn) {
+  const input = document.getElementById(id);
+  if (input.type === 'password') { input.type = 'text'; btn.textContent = '🙈'; }
+  else { input.type = 'password'; btn.textContent = '👁'; }
+}
+</script>
+<script src="chatbot.js"></script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>/* RupeeWise Dark Mode — no-flash */(function(){try{var d=localStorage.getItem('rw_dark_mode'),p=window.matchMedia('(prefers-color-scheme:dark)').matches;if(d==='true'||(d===null&&p))document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Create Account — RupeeWise</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .auth-root { min-height:calc(100vh - var(--nav-h)); display:grid; grid-template-columns:1fr 1fr; }
+    @media(max-width:768px){ .auth-root{grid-template-columns:1fr} .auth-panel{display:none!important} }
+    .auth-panel {
+      background: linear-gradient(145deg,#0f172a 0%,#1e2d3e 50%,#0f172a 100%);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:48px; position:relative; overflow:hidden;
+    }
+    .auth-panel::before {
+      content:''; position:absolute; top:-80px; right:-80px;
+      width:320px; height:320px; background:radial-gradient(circle,rgba(59,130,246,.2) 0%,transparent 70%); border-radius:50%;
+    }
+    .auth-panel::after {
+      content:''; position:absolute; bottom:-60px; left:-60px;
+      width:240px; height:240px; background:radial-gradient(circle,rgba(34,197,94,.15) 0%,transparent 70%); border-radius:50%;
+    }
+    .panel-logo { display:flex; align-items:center; gap:10px; margin-bottom:40px; }
+    .panel-logo-icon { width:44px; height:44px; background:var(--green); border-radius:13px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 18px rgba(34,197,94,.5); }
+    .panel-logo-icon svg { width:22px; height:22px; }
+    .panel-headline { font-family:var(--font-display); font-size:2rem; font-weight:800; color:#fff; line-height:1.2; text-align:center; margin-bottom:12px; }
+    .panel-sub { color:rgba(255,255,255,.55); text-align:center; font-size:.9rem; line-height:1.7; max-width:320px; margin-bottom:40px; }
+    .panel-benefits { display:flex; flex-direction:column; gap:14px; width:100%; max-width:300px; }
+    .panel-benefit {
+      display:flex; align-items:center; gap:14px;
+      background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1);
+      border-radius:12px; padding:12px 16px; backdrop-filter:blur(8px);
+    }
+    .benefit-icon  { font-size:1.3rem; width:36px; text-align:center; }
+    .benefit-title { font-weight:700; color:#fff; font-size:.875rem; margin-bottom:1px; }
+    .benefit-sub   { font-size:.72rem; color:rgba(255,255,255,.45); }
+
+    .auth-form-wrap { display:flex; align-items:flex-start; justify-content:center; padding:32px 24px; background:var(--bg-card); overflow-y:auto; }
+    [data-theme="dark"] .auth-form-wrap { background:var(--bg); }
+    .auth-card { width:100%; max-width:460px; padding:8px 0; }
+    .auth-title    { font-size:1.6rem; margin-bottom:4px; }
+    .auth-subtitle { color:var(--text-secondary); font-size:.875rem; margin-bottom:26px; }
+
+    .auth-logo-mobile { display:none; align-items:center; gap:8px; margin-bottom:20px; font-family:var(--font-display); font-weight:800; font-size:1.1rem; }
+    @media(max-width:768px){ .auth-logo-mobile{display:flex} }
+    .auth-logo-mobile-icon { width:32px; height:32px; background:var(--green); border-radius:9px; display:flex; align-items:center; justify-content:center; }
+    .auth-logo-mobile-icon svg{ width:16px; height:16px; }
+
+    .form-group  { margin-bottom:14px; }
+    .form-row    { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    @media(max-width:480px){ .form-row{grid-template-columns:1fr} }
+    .form-label  { font-size:.78rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:5px; }
+    .form-input  {
+      width:100%; font-family:var(--font-body); font-size:.875rem; padding:10px 14px;
+      background:var(--bg); border:1.5px solid var(--border); border-radius:var(--radius);
+      color:var(--text-primary); outline:none; transition:border .18s,box-shadow .18s;
+    }
+    .form-input:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(34,197,94,.1); }
+    .form-input.error { border-color:var(--red); }
+    .input-icon-wrap { position:relative; }
+    .input-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:.85rem; pointer-events:none; }
+    .input-icon-wrap .form-input { padding-left:36px; }
+    .pw-toggle { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:.85rem; }
+
+    /* Password strength */
+    .pw-strength { margin-top:6px; }
+    .pw-strength-bar { height:4px; background:var(--border); border-radius:2px; overflow:hidden; margin-bottom:4px; }
+    .pw-strength-fill { height:100%; border-radius:2px; transition:width .3s,background .3s; }
+    .pw-strength-label { font-size:.72rem; font-weight:600; }
+
+    /* Risk profile cards */
+    .risk-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .risk-card {
+      border:1.5px solid var(--border); border-radius:10px; padding:10px 8px; text-align:center;
+      cursor:pointer; transition:all .18s;
+    }
+    .risk-card:hover { border-color:var(--green); background:var(--green-bg); }
+    .risk-card.selected { border-color:var(--green); background:var(--green-bg); }
+    .risk-card input { display:none; }
+    .risk-emoji { font-size:1.3rem; margin-bottom:4px; }
+    .risk-label { font-size:.72rem; font-weight:700; color:var(--text-primary); margin-bottom:2px; }
+    .risk-desc  { font-size:.65rem; color:var(--text-muted); }
+
+    .error-banner { background:var(--red-bg); border:1px solid var(--red-border); border-radius:10px; padding:10px 14px; margin-bottom:14px; font-size:.85rem; color:var(--red); display:flex; align-items:center; gap:8px; }
+    .auth-divider { text-align:center; color:var(--text-muted); font-size:.78rem; margin:14px 0; position:relative; }
+    .auth-divider::before,.auth-divider::after{ content:''; position:absolute; top:50%; width:calc(50% - 28px); height:1px; background:var(--border); }
+    .auth-divider::before{left:0}.auth-divider::after{right:0}
+    .auth-switch { text-align:center; margin-top:16px; font-size:.85rem; color:var(--text-secondary); }
+    .auth-switch a { color:var(--green-dark); font-weight:700; }
+    .terms-note { font-size:.72rem; color:var(--text-muted); text-align:center; margin-top:10px; line-height:1.5; }
+    .terms-note a { color:var(--green-dark); }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+      RupeeWise
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link" data-page="index.html">Home</a>
+      <a href="stocks.html" class="nav-link" data-page="stocks.html">📈 Stocks</a>
+      <a href="learn.html" class="nav-link" data-page="learn.html">🎓 Learn</a>
+    </div>
+    <div class="nav-actions">
+      <button class="dark-toggle" onclick="toggleDarkMode()">🌙</button>
+      <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">☰</button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html" class="nav-link">🏠 Home</a>
+    <a href="stocks.html" class="nav-link">📈 Stocks</a>
+    <a href="learn.html" class="nav-link">🎓 Learn</a>
+  </div>
+</nav>
+
+<div class="auth-root">
+  <!-- Left panel -->
+  <div class="auth-panel">
+    <div class="panel-logo">
+      <div class="panel-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+      <span style="font-family:var(--font-display);font-size:1.4rem;font-weight:800;color:#fff">RupeeWise</span>
+    </div>
+    <h2 class="panel-headline">Your Wealth<br>Journey Starts Here</h2>
+    <p class="panel-sub">Sign up in under 2 minutes and join thousands of smart investors building wealth the right way.</p>
+    <div class="panel-benefits">
+      <div class="panel-benefit"><div class="benefit-icon">📈</div><div><div class="benefit-title">Live NIFTY 50 Stocks</div><div class="benefit-sub">Real-time prices, charts & trade UI</div></div></div>
+      <div class="panel-benefit"><div class="benefit-icon">🎓</div><div><div class="benefit-title">Finance Quiz</div><div class="benefit-sub">60+ MCQs across 6 topics</div></div></div>
+      <div class="panel-benefit"><div class="benefit-icon">🎯</div><div><div class="benefit-title">Goal Tracking</div><div class="benefit-sub">Set targets, track progress</div></div></div>
+      <div class="panel-benefit"><div class="benefit-icon">🔒</div><div><div class="benefit-title">100% Secure</div><div class="benefit-sub">Your data stays on your device</div></div></div>
+    </div>
+  </div>
+
+  <!-- Right form -->
+  <div class="auth-form-wrap">
+    <div class="auth-card fade-up">
+      <div class="auth-logo-mobile">
+        <div class="auth-logo-mobile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+        RupeeWise
+      </div>
+      <h2 class="auth-title">Create your account 🚀</h2>
+      <p class="auth-subtitle">Free forever — no credit card required</p>
+
+      <div class="error-banner hide" id="reg-error"><span>❌</span><span id="reg-error-text"></span></div>
+
+      <form id="reg-form" onsubmit="doRegister(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <div class="input-icon-wrap"><span class="input-icon">👤</span><input type="text" id="reg-name" class="form-input" placeholder="Aakash Kumar" required/></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone (optional)</label>
+            <div class="input-icon-wrap"><span class="input-icon">📱</span><input type="tel" id="reg-phone" class="form-input" placeholder="+91 98765 43210"/></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <div class="input-icon-wrap"><span class="input-icon">✉️</span><input type="email" id="reg-email" class="form-input" placeholder="you@example.com" required autocomplete="email"/></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password *</label>
+          <div class="input-icon-wrap" style="position:relative">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="reg-password" class="form-input" placeholder="Min. 8 chars with uppercase & number" oninput="updateStrength(this.value)" required autocomplete="new-password"/>
+            <button type="button" class="pw-toggle" onclick="togglePw('reg-password',this)">👁</button>
+          </div>
+          <div class="pw-strength" id="pw-strength" style="display:none">
+            <div class="pw-strength-bar"><div class="pw-strength-fill" id="pw-fill" style="width:0%"></div></div>
+            <span class="pw-strength-label" id="pw-label" style="color:var(--text-muted)">Weak</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Investment Risk Profile *</label>
+          <div class="risk-cards">
+            <label class="risk-card" onclick="selectRisk('conservative',this)">
+              <input type="radio" name="risk" value="conservative"/>
+              <div class="risk-emoji">🛡️</div>
+              <div class="risk-label">Conservative</div>
+              <div class="risk-desc">Low risk, stable returns</div>
+            </label>
+            <label class="risk-card selected" onclick="selectRisk('moderate',this)">
+              <input type="radio" name="risk" value="moderate" checked/>
+              <div class="risk-emoji">⚖️</div>
+              <div class="risk-label">Moderate</div>
+              <div class="risk-desc">Balanced risk & reward</div>
+            </label>
+            <label class="risk-card" onclick="selectRisk('aggressive',this)">
+              <input type="radio" name="risk" value="aggressive"/>
+              <div class="risk-emoji">🚀</div>
+              <div class="risk-label">Aggressive</div>
+              <div class="risk-desc">High risk, high potential</div>
+            </label>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-full" style="padding:13px;font-size:1rem;border-radius:12px;margin-top:4px" id="reg-btn">
+          Create Account →
+        </button>
+
+        <p class="terms-note">By creating an account, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. This is a demo app — no real money involved.</p>
+      </form>
+
+      <div class="auth-switch">Already have an account? <a href="login.html">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="script.js"></script>
+<script src="auth.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (Auth.isLoggedIn()) { window.location.href = 'dashboard.html'; return; }
+});
+
+let selectedRisk = 'moderate';
+
+function selectRisk(value, card) {
+  selectedRisk = value;
+  document.querySelectorAll('.risk-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+}
+
+function updateStrength(val) {
+  const bar  = document.getElementById('pw-fill');
+  const lbl  = document.getElementById('pw-label');
+  const wrap = document.getElementById('pw-strength');
+  if (!val) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  const { score, label, color } = getPasswordStrength(val);
+  bar.style.width      = score + '%';
+  bar.style.background = color;
+  lbl.textContent      = label;
+  lbl.style.color      = color;
+}
+
+function togglePw(id, btn) {
+  const input = document.getElementById(id);
+  input.type  = input.type === 'password' ? 'text' : 'password';
+  btn.textContent = input.type === 'password' ? '👁' : '🙈';
+}
+
+function doRegister(e) {
+  e.preventDefault();
+  const errEl  = document.getElementById('reg-error');
+  const errTxt = document.getElementById('reg-error-text');
+  const btn    = document.getElementById('reg-btn');
+  errEl.classList.add('hide');
+  btn.textContent = 'Creating account…';
+  btn.disabled    = true;
+
+  setTimeout(() => {
+    const result = Auth.register({
+      name:        document.getElementById('reg-name').value.trim(),
+      email:       document.getElementById('reg-email').value.trim(),
+      password:    document.getElementById('reg-password').value,
+      phone:       document.getElementById('reg-phone').value.trim(),
+      riskProfile: selectedRisk,
+    });
+
+    if (result.ok) {
+      toast(`Account created! Welcome, ${result.user.name.split(' ')[0]}! 🎉`, 'success');
+      setTimeout(() => window.location.href = 'dashboard.html', 700);
+    } else {
+      errTxt.textContent = result.error;
+      errEl.classList.remove('hide');
+      btn.textContent = 'Create Account →';
+      btn.disabled    = false;
+    }
+  }, 500);
+}
+</script>
+<script src="chatbot.js"></script>
+</body>
+</html>

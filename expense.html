@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>/* RupeeWise Dark Mode — no-flash */(function(){try{var d=localStorage.getItem('rw_dark_mode'),p=window.matchMedia('(prefers-color-scheme:dark)').matches;if(d==='true'||(d===null&&p))document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Expense Tracker — RupeeWise</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    .exp-root { max-width:1100px; margin:0 auto; padding:24px 20px 80px; }
+
+    /* ── TABS ── */
+    .exp-tabs { display:flex; gap:4px; background:var(--bg-hover); border-radius:12px; padding:4px; margin-bottom:28px; }
+    .exp-tab { flex:1; text-align:center; padding:10px; border-radius:9px; border:none; background:none; font-family:var(--font-body); font-size:.85rem; font-weight:600; color:var(--text-secondary); cursor:pointer; transition:all .18s; }
+    .exp-tab.active { background:var(--bg-card); color:var(--green-dark); box-shadow:var(--shadow-sm); }
+    .exp-panel { display:none; } .exp-panel.active { display:block; animation:fadeUp .4s ease; }
+
+    /* ── ADD EXPENSE ── */
+    .add-exp-card { background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:24px; margin-bottom:20px; }
+    .cat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px; }
+    @media(max-width:600px){ .cat-grid{grid-template-columns:repeat(2,1fr)} }
+    .cat-btn {
+      border:2px solid var(--border); border-radius:12px; padding:10px 8px; text-align:center;
+      cursor:pointer; background:var(--bg-card); transition:all .18s; font-family:var(--font-body);
+    }
+    .cat-btn:hover { border-color:var(--green); background:var(--green-bg); }
+    .cat-btn.selected { border-color:var(--green); background:var(--green-bg); }
+    .cat-emoji { font-size:1.5rem; display:block; margin-bottom:4px; }
+    .cat-name  { font-size:.72rem; font-weight:700; color:var(--text-primary); }
+    .exp-form-row { display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:10px; align-items:end; }
+    @media(max-width:700px){ .exp-form-row{grid-template-columns:1fr 1fr} }
+    .field-grp { display:flex; flex-direction:column; gap:5px; }
+    .field-lbl { font-size:.75rem; font-weight:700; color:var(--text-secondary); }
+    .field-inp {
+      padding:10px 12px; border:1.5px solid var(--border); border-radius:10px;
+      font-family:var(--font-body); font-size:.875rem; background:var(--bg);
+      color:var(--text-primary); outline:none; transition:border .18s;
+    }
+    .field-inp:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(34,197,94,.1); }
+
+    /* ── EXPENSE LIST ── */
+    .exp-list { display:flex; flex-direction:column; gap:6px; }
+    .exp-row {
+      display:flex; align-items:center; gap:12px; padding:12px 14px;
+      background:var(--bg-card); border:1px solid var(--border); border-radius:12px;
+      transition:all .18s; animation:fadeUp .3s ease;
+    }
+    .exp-row:hover { border-color:var(--green-border); box-shadow:var(--shadow-sm); }
+    .exp-cat-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+    .exp-desc { font-weight:600; font-size:.875rem; }
+    .exp-date { font-size:.72rem; color:var(--text-muted); }
+    .exp-amount { font-weight:800; font-family:var(--font-display); margin-left:auto; color:var(--red); font-size:1rem; white-space:nowrap; }
+    .exp-del { background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem; padding:4px; border-radius:6px; transition:all .18s; }
+    .exp-del:hover { background:#fef2f2; color:var(--red); }
+
+    /* ── SUMMARY CARDS ── */
+    .summary-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px; }
+    @media(max-width:700px){ .summary-strip{grid-template-columns:1fr 1fr} }
+    .sum-card { background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:14px; text-align:center; }
+    .sum-label { font-size:.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
+    .sum-value { font-family:var(--font-display); font-weight:800; font-size:1.3rem; }
+    .sum-sub   { font-size:.7rem; color:var(--text-muted); margin-top:3px; }
+
+    /* ── ROAST SECTION ── */
+    .roast-card {
+      background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);
+      border-radius:20px; padding:24px; margin-bottom:20px; position:relative; overflow:hidden;
+    }
+    .roast-card::before { content:'🔥'; position:absolute; right:20px; top:10px; font-size:4rem; opacity:.15; }
+    .roast-title { font-family:var(--font-display); font-size:1.3rem; font-weight:800; color:#fff; margin-bottom:4px; }
+    .roast-sub   { font-size:.82rem; color:rgba(255,255,255,.55); margin-bottom:18px; }
+    .roast-btn   {
+      background:linear-gradient(135deg,#f97316,#ef4444);
+      color:#fff; border:none; border-radius:12px; padding:12px 24px;
+      font-family:var(--font-display); font-weight:800; font-size:.95rem; cursor:pointer;
+      display:flex; align-items:center; gap:8px; transition:all .2s;
+      box-shadow:0 4px 18px rgba(239,68,68,.4);
+    }
+    .roast-btn:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(239,68,68,.5); }
+    .roast-result { margin-top:18px; animation:fadeUp .4s ease; }
+    .roast-bubble {
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+      border-radius:14px; padding:16px; font-size:.9rem; line-height:1.75; color:#fff;
+    }
+    .roast-meter { margin-top:14px; }
+    .roast-meter-label { font-size:.72rem; color:rgba(255,255,255,.5); margin-bottom:6px; }
+    .roast-meter-bar { height:8px; border-radius:99px; background:rgba(255,255,255,.1); overflow:hidden; }
+    .roast-meter-fill { height:100%; border-radius:99px; background:linear-gradient(90deg,#22c55e,#ef4444); transition:width 1.5s ease; }
+    .roast-advice-strip { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+    .roast-advice-card  { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:12px; }
+    .roast-advice-title { font-size:.78rem; font-weight:700; color:rgba(255,255,255,.8); margin-bottom:4px; }
+    .roast-advice-val   { font-family:var(--font-display); font-weight:800; font-size:1.1rem; color:#fff; }
+    .roast-advice-sub   { font-size:.68rem; color:rgba(255,255,255,.45); margin-top:2px; }
+
+    /* ── GOAL PLANNER ── */
+    .goal-planner-card { background:var(--bg-card); border:1px solid var(--border); border-radius:20px; padding:24px; }
+    .goal-emoji-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:20px; }
+    @media(max-width:500px){ .goal-emoji-grid{grid-template-columns:repeat(3,1fr)} }
+    .goal-emoji-btn { border:2px solid var(--border); border-radius:12px; padding:12px 6px; text-align:center; cursor:pointer; background:var(--bg-card); transition:all .18s; font-family:var(--font-body); }
+    .goal-emoji-btn:hover,.goal-emoji-btn.selected { border-color:var(--green); background:var(--green-bg); }
+    .goal-emoji-btn .emoji { font-size:1.6rem; margin-bottom:4px; }
+    .goal-emoji-btn .name  { font-size:.65rem; font-weight:700; color:var(--text-primary); }
+    .goal-result { background:linear-gradient(135deg,var(--green-bg),#eff6ff); border:1px solid var(--green-border); border-radius:16px; padding:20px; margin-top:18px; animation:fadeUp .4s ease; }
+    .goal-result-title { font-family:var(--font-display); font-size:1.1rem; font-weight:800; color:var(--slate-900,#0f172a); margin-bottom:14px; }
+    .goal-plan-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px; }
+    @media(max-width:500px){ .goal-plan-grid{grid-template-columns:1fr 1fr} }
+    .goal-plan-item { background:#fff; border-radius:12px; padding:12px; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+    .goal-plan-label { font-size:.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px; }
+    .goal-plan-val   { font-family:var(--font-display); font-weight:800; font-size:1.05rem; color:var(--green-dark); }
+    .goal-plan-sub   { font-size:.68rem; color:var(--text-muted); }
+    .goal-timeline   { display:flex; flex-direction:column; gap:8px; margin-top:14px; }
+    .goal-step { display:flex; align-items:center; gap:10px; background:#fff; border-radius:10px; padding:10px 12px; }
+    .goal-step-num { width:26px; height:26px; border-radius:8px; background:var(--green); color:#fff; font-weight:800; font-size:.78rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .goal-step-text { font-size:.82rem; color:var(--text-secondary); }
+    .goal-step-text strong { color:var(--text-primary); }
+
+    /* Upload CSV */
+    .upload-zone {
+      border:2px dashed var(--border); border-radius:14px; padding:28px;
+      text-align:center; cursor:pointer; transition:all .18s; background:var(--bg);
+    }
+    .upload-zone:hover, .upload-zone.drag { border-color:var(--green); background:var(--green-bg); }
+    .upload-icon { font-size:2.5rem; margin-bottom:8px; }
+    .upload-text { font-size:.875rem; color:var(--text-secondary); margin-bottom:4px; }
+    .upload-sub  { font-size:.72rem; color:var(--text-muted); }
+
+    [data-theme="dark"] .goal-plan-item, [data-theme="dark"] .goal-step { background:var(--bg-hover); }
+    [data-theme="dark"] .field-inp { background:var(--bg); }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+      RupeeWise
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="stocks.html" class="nav-link">📈 Stocks</a>
+      <a href="expense.html" class="nav-link active">💸 Expense</a>
+      <a href="trading.html" class="nav-link">🎮 Trade</a>
+      <a href="learn.html" class="nav-link">🎓 Learn</a>
+      <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+    </div>
+    <div class="nav-actions">
+      <button class="dark-toggle" onclick="toggleDarkMode()">🌙</button>
+      <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">☰</button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html" class="nav-link">🏠 Home</a>
+    <a href="stocks.html" class="nav-link">📈 Stocks</a>
+    <a href="expense.html" class="nav-link active">💸 Expense</a>
+    <a href="trading.html" class="nav-link">🎮 Trade</a>
+    <a href="learn.html" class="nav-link">🎓 Learn</a>
+    <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+  </div>
+</nav>
+
+<div class="exp-root">
+  <div style="margin-bottom:22px">
+    <h1 style="font-size:1.7rem;margin-bottom:4px">💸 Expense Tracker & AI Roast</h1>
+    <p style="color:var(--text-secondary);font-size:.9rem">Track karo, roast suno, aur smart invest karo 🔥</p>
+  </div>
+
+  <!-- TABS -->
+  <div class="exp-tabs">
+    <button class="exp-tab active" onclick="switchTab('tracker',this)">📊 Tracker</button>
+    <button class="exp-tab" onclick="switchTab('roast',this)">🔥 AI Roast</button>
+    <button class="exp-tab" onclick="switchTab('goal',this)">🎯 Goal Planner</button>
+    <button class="exp-tab" onclick="switchTab('upload',this)">📁 Upload CSV</button>
+  </div>
+
+  <!-- ══ TRACKER TAB ══ -->
+  <div class="exp-panel active" id="panel-tracker">
+
+    <!-- Summary -->
+    <div class="summary-strip" id="summary-strip">
+      <div class="sum-card"><div class="sum-label">This Month</div><div class="sum-value text-red" id="sum-month">₹0</div><div class="sum-sub">Total spent</div></div>
+      <div class="sum-card"><div class="sum-label">Biggest Category</div><div class="sum-value" id="sum-top-cat">—</div><div class="sum-sub" id="sum-top-pct">—</div></div>
+      <div class="sum-card"><div class="sum-label">Daily Average</div><div class="sum-value" id="sum-daily">₹0</div><div class="sum-sub">per day</div></div>
+      <div class="sum-card"><div class="sum-label">Saveable Amount</div><div class="sum-value text-green" id="sum-save">₹0</div><div class="sum-sub">if you cut 20%</div></div>
+    </div>
+
+    <!-- Charts row -->
+    <div style="display:grid;grid-template-columns:3fr 2fr;gap:14px;margin-bottom:18px">
+      <div class="add-exp-card" style="padding:18px">
+        <h3 style="font-size:.92rem;margin-bottom:12px">Spending by Day</h3>
+        <canvas id="dayChart" height="120"></canvas>
+      </div>
+      <div class="add-exp-card" style="padding:18px">
+        <h3 style="font-size:.92rem;margin-bottom:12px">By Category</h3>
+        <canvas id="catChart" height="120"></canvas>
+      </div>
+    </div>
+
+    <!-- Add Expense Form -->
+    <div class="add-exp-card">
+      <h3 style="font-size:.95rem;font-weight:700;margin-bottom:14px">➕ Add Expense</h3>
+      <!-- Category picker -->
+      <div class="cat-grid" id="cat-grid"></div>
+      <div class="exp-form-row">
+        <div class="field-grp">
+          <label class="field-lbl">Description</label>
+          <input type="text" class="field-inp" id="exp-desc" placeholder="e.g. Starbucks coffee"/>
+        </div>
+        <div class="field-grp">
+          <label class="field-lbl">Amount (₹)</label>
+          <input type="number" class="field-inp" id="exp-amount" placeholder="250" min="1"/>
+        </div>
+        <div class="field-grp">
+          <label class="field-lbl">Date</label>
+          <input type="date" class="field-inp" id="exp-date"/>
+        </div>
+        <button class="btn btn-primary" onclick="addExpense()" style="border-radius:10px;padding:10px 20px">Add</button>
+      </div>
+    </div>
+
+    <!-- Expense List -->
+    <div style="margin-top:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <h3 style="font-size:.95rem">Recent Expenses</h3>
+        <button class="btn btn-ghost btn-sm" onclick="clearAllExpenses()" style="color:var(--red)">Clear All</button>
+      </div>
+      <div class="exp-list" id="exp-list">
+        <div style="text-align:center;padding:36px;color:var(--text-muted)">
+          <div style="font-size:2.5rem;margin-bottom:8px">💳</div>
+          <div>Koi expense nahi abhi. Add karo!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ROAST TAB ══ -->
+  <div class="exp-panel" id="panel-roast">
+    <div class="roast-card" id="roast-main">
+      <div class="roast-title">🔥 AI Expense Roast</div>
+      <div class="roast-sub">Teri spending dekh ke Rupa ko dard hota hai. Sunne ki himmat hai? 😂</div>
+      <button class="roast-btn" onclick="generateRoast()">
+        <span>🔥</span> Roast My Spending!
+      </button>
+      <div class="roast-result hide" id="roast-result"></div>
+    </div>
+
+    <!-- Spending health tips -->
+    <div class="add-exp-card" style="margin-top:16px">
+      <h3 style="font-size:.95rem;margin-bottom:14px">💡 Smart Spending Tips</h3>
+      <div id="tips-list" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+  </div>
+
+  <!-- ══ GOAL PLANNER TAB ══ -->
+  <div class="exp-panel" id="panel-goal">
+    <div class="goal-planner-card">
+      <h2 style="font-size:1.1rem;margin-bottom:4px">🎯 Goal-Based Investing</h2>
+      <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:20px">Batao kya chahiye — Rupa plan banayegi! 🤖</p>
+
+      <!-- Goal presets -->
+      <div class="goal-emoji-grid" id="goal-presets"></div>
+
+      <!-- Custom goal -->
+      <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
+        <p style="font-size:.8rem;font-weight:700;color:var(--text-secondary);margin-bottom:10px">Ya apna goal type karo:</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end">
+          <div class="field-grp">
+            <label class="field-lbl">Goal</label>
+            <input type="text" class="field-inp" id="goal-name" placeholder="iPhone 16 Pro"/>
+          </div>
+          <div class="field-grp">
+            <label class="field-lbl">Target Amount (₹)</label>
+            <input type="number" class="field-inp" id="goal-amount" placeholder="130000"/>
+          </div>
+          <div class="field-grp">
+            <label class="field-lbl">Monthly Savings (₹)</label>
+            <input type="number" class="field-inp" id="goal-monthly" placeholder="5000"/>
+          </div>
+          <button class="btn btn-primary" onclick="calculateGoal()" style="border-radius:10px;padding:10px 18px">Plan Karo!</button>
+        </div>
+      </div>
+
+      <div class="goal-result hide" id="goal-result"></div>
+    </div>
+  </div>
+
+  <!-- ══ UPLOAD TAB ══ -->
+  <div class="exp-panel" id="panel-upload">
+    <div class="add-exp-card">
+      <h3 style="font-size:.95rem;margin-bottom:4px">📁 CSV Upload karo apni expenses</h3>
+      <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:16px">Format: Date, Description, Amount, Category</p>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('csv-input').click()" ondragover="dragOver(event)" ondrop="dropFile(event)" ondragleave="dragLeave(event)">
+        <div class="upload-icon">📂</div>
+        <div class="upload-text">CSV file yahan drag karo ya click karo</div>
+        <div class="upload-sub">Supports: .csv, .txt — Max 5MB</div>
+      </div>
+      <input type="file" id="csv-input" accept=".csv,.txt" style="display:none" onchange="handleFileUpload(event)"/>
+      <div id="upload-preview" class="hide" style="margin-top:16px"></div>
+      <div style="margin-top:16px;background:var(--bg-hover);border-radius:12px;padding:14px">
+        <p style="font-size:.78rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px">📋 Sample CSV Format:</p>
+        <pre style="font-size:.72rem;color:var(--text-muted);font-family:monospace;white-space:pre-wrap">Date,Description,Amount,Category
+2026-03-01,Starbucks Coffee,450,Food
+2026-03-02,Uber ride,320,Transport
+2026-03-03,Netflix subscription,649,Entertainment
+2026-03-04,Amazon shopping,2500,Shopping</pre>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast-container"></div>
+<script src="script.js"></script>
+<script src="auth.js"></script>
+<script src="chatbot.js"></script>
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════════════
+   CATEGORIES
+══════════════════════════════════════════════════════════ */
+const CATEGORIES = [
+  { id:'food',        emoji:'🍔', name:'Food',        color:'#f97316', bg:'#fff7ed' },
+  { id:'coffee',      emoji:'☕', name:'Coffee',      color:'#a16207', bg:'#fef9c3' },
+  { id:'transport',   emoji:'🚗', name:'Transport',   color:'#0284c7', bg:'#e0f2fe' },
+  { id:'shopping',    emoji:'🛍️', name:'Shopping',   color:'#9333ea', bg:'#f3e8ff' },
+  { id:'entertainment',emoji:'🎬',name:'Fun',        color:'#e11d48', bg:'#fff1f2' },
+  { id:'health',      emoji:'🏥', name:'Health',      color:'#16a34a', bg:'#f0fdf4' },
+  { id:'rent',        emoji:'🏠', name:'Rent',        color:'#0d9488', bg:'#f0fdfa' },
+  { id:'education',   emoji:'📚', name:'Education',   color:'#2563eb', bg:'#eff6ff' },
+];
+
+const GOAL_PRESETS = [
+  { emoji:'📱', name:'iPhone 16 Pro', amount:134900, icon:'📱' },
+  { emoji:'✈️', name:'Europe Trip',   amount:150000, icon:'✈️' },
+  { emoji:'🏍️', name:'Bike (Bullet)', amount:220000, icon:'🏍️' },
+  { emoji:'💻', name:'MacBook Air',   amount:114900, icon:'💻' },
+  { emoji:'🎮', name:'PS5',           amount:54990,  icon:'🎮' },
+  { emoji:'💍', name:'Engagement Ring',amount:80000, icon:'💍' },
+  { emoji:'🚗', name:'Down Payment',  amount:200000, icon:'🚗' },
+  { emoji:'🏠', name:'Dream Home',    amount:5000000,icon:'🏠' },
+  { emoji:'📸', name:'DSLR Camera',   amount:45000,  icon:'📸' },
+  { emoji:'⌚', name:'Apple Watch',   amount:45900,  icon:'⌚' },
+];
+
+/* ══ STATE ══ */
+let expenses     = JSON.parse(localStorage.getItem('rw_expenses') || '[]');
+let selectedCat  = CATEGORIES[0].id;
+let selectedGoal = null;
+let dayChart     = null;
+let catChart     = null;
+
+/* ══ INIT ══ */
+document.addEventListener('DOMContentLoaded', () => {
+  buildCategoryGrid();
+  buildGoalPresets();
+  renderExpenses();
+  renderCharts();
+  buildTips();
+  // Set today's date as default
+  document.getElementById('exp-date').value = new Date().toISOString().slice(0,10);
+  // Add sample data if empty
+  if (!expenses.length) addSampleData();
+});
+
+function addSampleData() {
+  const today = new Date();
+  const sample = [
+    { id:uid(), desc:'Starbucks coffee',    cat:'coffee',   amount:450,  date:fmtDate(today, -1) },
+    { id:uid(), desc:'Zomato biryani',      cat:'food',     amount:380,  date:fmtDate(today, -2) },
+    { id:uid(), desc:'Uber to office',      cat:'transport',amount:280,  date:fmtDate(today, -3) },
+    { id:uid(), desc:'Netflix',             cat:'entertainment',amount:649,date:fmtDate(today,-5) },
+    { id:uid(), desc:'Amazon shoes',        cat:'shopping', amount:2499, date:fmtDate(today, -6) },
+    { id:uid(), desc:'Gym membership',      cat:'health',   amount:1500, date:fmtDate(today, -8) },
+    { id:uid(), desc:'Blinkit grocery',     cat:'food',     amount:860,  date:fmtDate(today,-10) },
+    { id:uid(), desc:'Cafe Coffee Day',     cat:'coffee',   amount:320,  date:fmtDate(today,-12) },
+    { id:uid(), desc:'Movie tickets (2)',   cat:'entertainment',amount:600,date:fmtDate(today,-14)},
+    { id:uid(), desc:'Rapido',              cat:'transport',amount:120,  date:fmtDate(today,-15) },
+  ];
+  expenses = sample;
+  saveExpenses();
+  renderExpenses();
+  renderCharts();
+}
+
+function fmtDate(base, daysBack) {
+  const d = new Date(base);
+  d.setDate(d.getDate() + daysBack);
+  return d.toISOString().slice(0,10);
+}
+function uid() { return Math.random().toString(36).slice(2,9); }
+
+/* ══ CATEGORY GRID ══ */
+function buildCategoryGrid() {
+  const grid = document.getElementById('cat-grid');
+  grid.innerHTML = CATEGORIES.map(c => `
+    <button class="cat-btn ${c.id === selectedCat ? 'selected' : ''}" onclick="selectCat('${c.id}',this)">
+      <span class="cat-emoji">${c.emoji}</span>
+      <span class="cat-name">${c.name}</span>
+    </button>`).join('');
+}
+
+function selectCat(id, btn) {
+  selectedCat = id;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+/* ══ ADD EXPENSE ══ */
+function addExpense() {
+  const desc   = document.getElementById('exp-desc').value.trim();
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  const date   = document.getElementById('exp-date').value;
+  if (!desc || !amount || amount <= 0) { toast('Sab fields fill karo bhai! 😤','error'); return; }
+
+  expenses.unshift({ id:uid(), desc, cat:selectedCat, amount, date: date || new Date().toISOString().slice(0,10) });
+  saveExpenses();
+  renderExpenses();
+  renderCharts();
+  document.getElementById('exp-desc').value   = '';
+  document.getElementById('exp-amount').value = '';
+  toast(`₹${amount} added! 💸`,'success');
+}
+
+function deleteExpense(id) {
+  expenses = expenses.filter(e => e.id !== id);
+  saveExpenses();
+  renderExpenses();
+  renderCharts();
+}
+
+function clearAllExpenses() {
+  if (!confirm('Saari expenses delete karo? 🗑️')) return;
+  expenses = [];
+  saveExpenses();
+  renderExpenses();
+  renderCharts();
+}
+
+function saveExpenses() { localStorage.setItem('rw_expenses', JSON.stringify(expenses)); }
+
+/* ══ RENDER LIST ══ */
+function renderExpenses() {
+  const list = document.getElementById('exp-list');
+  const total = expenses.reduce((a,e)=>a+e.amount,0);
+
+  // Summary
+  document.getElementById('sum-month').textContent = formatINR(total);
+  document.getElementById('sum-daily').textContent = formatINR(total / 30);
+  document.getElementById('sum-save').textContent  = formatINR(total * 0.2);
+
+  // Top category
+  const catTotals = {};
+  expenses.forEach(e => { catTotals[e.cat] = (catTotals[e.cat]||0) + e.amount; });
+  const topCat = Object.entries(catTotals).sort((a,b)=>b[1]-a[1])[0];
+  if (topCat) {
+    const catInfo = CATEGORIES.find(c=>c.id===topCat[0]);
+    document.getElementById('sum-top-cat').textContent = `${catInfo?.emoji} ${catInfo?.name}`;
+    document.getElementById('sum-top-pct').textContent = `${Math.round(topCat[1]/total*100)}% of total`;
+  }
+
+  if (!expenses.length) {
+    list.innerHTML = `<div style="text-align:center;padding:36px;color:var(--text-muted)"><div style="font-size:2.5rem;margin-bottom:8px">💳</div><div>Koi expense nahi abhi. Add karo!</div></div>`;
+    return;
+  }
+
+  list.innerHTML = expenses.slice(0,20).map(e => {
+    const cat = CATEGORIES.find(c=>c.id===e.cat) || CATEGORIES[0];
+    return `<div class="exp-row">
+      <div class="exp-cat-icon" style="background:${cat.bg}">${cat.emoji}</div>
+      <div>
+        <div class="exp-desc">${e.desc}</div>
+        <div class="exp-date">${cat.name} · ${e.date}</div>
+      </div>
+      <div class="exp-amount">-₹${e.amount.toLocaleString('en-IN')}</div>
+      <button class="exp-del" onclick="deleteExpense('${e.id}')" title="Delete">🗑️</button>
+    </div>`;
+  }).join('');
+}
+
+/* ══ CHARTS ══ */
+function renderCharts() {
+  renderDayChart();
+  renderCatChart();
+}
+
+function renderDayChart() {
+  const ctx = document.getElementById('dayChart');
+  if (!ctx) return;
+  if (dayChart) dayChart.destroy();
+
+  const last7 = [];
+  for (let i=6; i>=0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const label = d.toLocaleDateString('en-IN',{weekday:'short'});
+    const total = expenses.filter(e=>e.date===key).reduce((a,e)=>a+e.amount,0);
+    last7.push({ label, total });
+  }
+
+  dayChart = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: last7.map(d=>d.label),
+      datasets:[{ data:last7.map(d=>d.total), backgroundColor:last7.map(d=>d.total>2000?'rgba(239,68,68,.7)':'rgba(34,197,94,.7)'), borderRadius:6, borderWidth:0 }]
+    },
+    options:{ responsive:true, maintainAspectRatio:true, plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+v.raw.toLocaleString('en-IN')}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{ticks:{callback:v=>'₹'+(v/1000).toFixed(0)+'K',font:{size:10}},grid:{color:'rgba(0,0,0,.04)'}}} }
+  });
+}
+
+function renderCatChart() {
+  const ctx = document.getElementById('catChart');
+  if (!ctx) return;
+  if (catChart) catChart.destroy();
+  const catTotals = {};
+  expenses.forEach(e=>{ catTotals[e.cat]=(catTotals[e.cat]||0)+e.amount; });
+  const sorted = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  if (!sorted.length) return;
+  const cats = sorted.map(([id])=>CATEGORIES.find(c=>c.id===id)||{emoji:'💰',name:id,color:'#64748b'});
+
+  catChart = new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels: sorted.map(([id])=>cats.find(c=>c.id===id)?.name||id),
+      datasets:[{ data:sorted.map(([,v])=>v), backgroundColor:cats.map(c=>c.color||'#64748b'), borderWidth:0, hoverOffset:4 }]
+    },
+    options:{responsive:true,maintainAspectRatio:true,cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{size:9},boxWidth:10}}}}
+  });
+}
+
+/* ══ AI ROAST ══ */
+const ROAST_LINES = {
+  coffee: [
+    'Bhai, tu coffee addict hai ya investor? ☕ ₹{amt} coffee pe uda diya — yeh toh Starbucks ka shareholder banna chahta hai lagta hai!',
+    'Teri coffee spending dekh ke barista zyada khush hai tujhse. ₹{amt} coffee pe? Seedha shares khareed leta Starbucks ke! 😂',
+  ],
+  food: [
+    'Zomato waale tujhe gold member denge jaldi. ₹{amt} sirf khane pe? Bhai khana banana seekh — cooking is investing! 🍔',
+    'Food pe ₹{amt}?! Tu khata kam hai ya paisa jalata hai zyada? 😅',
+  ],
+  entertainment: [
+    'OTT subscriptions ek nahi... ek se zyada hai teri? ₹{amt} entertainment pe? Tab bhi bore rehta hai tu! 📺',
+    'Bhai movie + Netflix + gaming = ₹{amt}. Teri life movie lagti hai... lekin savings nahi dikh rahi! 🎬',
+  ],
+  shopping: [
+    'Amazon pe ₹{amt}?! Cart se "save for later" ka button nahi dikh raha kya tujhe? 🛍️',
+    'Shopping therapy chal rahi hai kya? ₹{amt} ke kapde/gadgets — kya yeh sab zaroorat tha? 😂',
+  ],
+  transport: [
+    'Tu Uber/Ola me hissa khareed le directly. ₹{amt} transport pe — pehle cycle khareed le kam se kam! 🚗',
+  ],
+};
+
+const GENERIC_ROASTS = [
+  'Yaar, teri spending dekh ke mujhe anxiety ho gayi. 😅 Total ₹{total} uda diya ek month mein? NIFTY se zyada volatility hai teri wallet mein!',
+  'Bhai, tu "YOLO" philosophy follow karta hai financially. ₹{total} spend karke investor banna chahta hai? Pehle spend karna kum kar! 🔥',
+  'Tera expense sheet dekh ke Rupa ro rahi hai. ₹{total} kharcha aur savings? Sirf sapne. 💸 Chal, plan banate hain!',
+];
+
+function generateRoast() {
+  const resultEl = document.getElementById('roast-result');
+  if (!expenses.length) {
+    toast('Pehle kuch expenses add karo, tab roast hoga! 😂','info');
+    return;
+  }
+
+  const total = expenses.reduce((a,e)=>a+e.amount,0);
+
+  // Category analysis
+  const catTotals = {};
+  expenses.forEach(e=>{ catTotals[e.cat]=(catTotals[e.cat]||0)+e.amount; });
+  const topCats = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]);
+  const topCat  = topCats[0];
+
+  // Pick roast lines
+  const roasts = [];
+  topCats.slice(0,3).forEach(([cat,amt]) => {
+    const lines = ROAST_LINES[cat];
+    if (lines) roasts.push(lines[Math.floor(Math.random()*lines.length)].replace('{amt}',formatINR(amt)));
+  });
+  if (roasts.length < 2) roasts.push(GENERIC_ROASTS[Math.floor(Math.random()*GENERIC_ROASTS.length)].replace('{total}',formatINR(total)));
+
+  // Spending score (lower is worse)
+  const catInfo = CATEGORIES.find(c=>c.id===topCat[0]);
+  const wastedPct = Math.round(topCat[1]/total*100);
+  const healthScore = Math.max(5, 100 - wastedPct * 1.5);
+
+  // Recommendations
+  const saveable  = Math.round(total * 0.25);
+  const sipTarget = Math.round(saveable * 0.8 / 100) * 100;
+
+  resultEl.classList.remove('hide');
+  resultEl.innerHTML = `
+    <div class="roast-bubble">
+      ${roasts.map(r=>`<p style="margin-bottom:10px">🤖 ${r}</p>`).join('')}
+      <p style="margin-bottom:0;opacity:.8;font-size:.82rem">— Rupa, RupeeWise AI (bura mat maano, pyaar se roast kiya hai 😄)</p>
+    </div>
+    <div class="roast-meter" style="margin-top:14px">
+      <div class="roast-meter-label">Financial Health Score: ${Math.round(healthScore)}/100</div>
+      <div class="roast-meter-bar"><div class="roast-meter-fill" id="health-fill" style="width:0%"></div></div>
+    </div>
+    <div class="roast-advice-strip">
+      <div class="roast-advice-card">
+        <div class="roast-advice-title">💡 Saveable Amount</div>
+        <div class="roast-advice-val">${formatINR(saveable)}</div>
+        <div class="roast-advice-sub">Bas 25% cut karo expenses</div>
+      </div>
+      <div class="roast-advice-card">
+        <div class="roast-advice-title">🔄 SIP Bana Sakta Hai</div>
+        <div class="roast-advice-val">${formatINR(sipTarget)}/mo</div>
+        <div class="roast-advice-sub">Iss amount ki SIP start karo</div>
+      </div>
+      <div class="roast-advice-card">
+        <div class="roast-advice-title">📈 10 Saal Mein</div>
+        <div class="roast-advice-val">${formatINR(sipTarget * 12 * 10 * 2.1)}</div>
+        <div class="roast-advice-sub">12% CAGR pe estimate</div>
+      </div>
+      <div class="roast-advice-card">
+        <div class="roast-advice-title">🔥 Biggest Waste</div>
+        <div class="roast-advice-val">${catInfo?.emoji} ${catInfo?.name}</div>
+        <div class="roast-advice-sub">${wastedPct}% of total spending</div>
+      </div>
+    </div>`;
+
+  setTimeout(()=>{ const fill=document.getElementById('health-fill'); if(fill) fill.style.width=healthScore+'%'; },300);
+}
+
+/* ══ TIPS ══ */
+function buildTips() {
+  const tips = [
+    { emoji:'☕', tip:'Coffee budget max ₹500/month. Ghar pe banao — ek coffee machine ₹3000 mein payback 3 months mein!', save:'₹1500/month' },
+    { emoji:'🍔', tip:'Zomato pe ₹50 ka delivery charge deta hai — seedha restaurant ja. 20 orders = ₹1000 extra!', save:'₹1000/month' },
+    { emoji:'📺', tip:'Netflix, Prime, Hotstar — teen kya?! Ek month each use karo rotation mein. 2 subscriptions cancel karo.', save:'₹800/month' },
+    { emoji:'🛍️', tip:'"72-hour rule" follow karo shopping mein — item ko cart mein daalo, 72 ghante baad decide karo. 50% shopping khud cancel ho jaati hai!', save:'Varies' },
+    { emoji:'🚗', tip:'Office ke liye monthly metro pass lo. Ola/Uber se 40% sasta padega.', save:'₹2000/month' },
+    { emoji:'💡', tip:'Har mahine budget banao: 50% zaroorat, 30% want, 20% savings. Simple rule, powerful results!', save:'20% more savings' },
+  ];
+  document.getElementById('tips-list').innerHTML = tips.map(t=>`
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--bg-hover);border-radius:12px">
+      <span style="font-size:1.4rem;flex-shrink:0">${t.emoji}</span>
+      <div style="flex:1">
+        <div style="font-size:.84rem;color:var(--text-primary);line-height:1.6">${t.tip}</div>
+        <div style="font-size:.72rem;color:var(--green-dark);font-weight:700;margin-top:3px">Save: ${t.save}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ══ GOAL PLANNER ══ */
+function buildGoalPresets() {
+  const grid = document.getElementById('goal-presets');
+  grid.innerHTML = GOAL_PRESETS.map(g=>`
+    <button class="goal-emoji-btn" onclick="selectGoalPreset(${JSON.stringify(g).replace(/"/g,'&quot;')},this)">
+      <div class="emoji">${g.emoji}</div>
+      <div class="name">${g.name}</div>
+    </button>`).join('');
+}
+
+function selectGoalPreset(goal, btn) {
+  selectedGoal = goal;
+  document.querySelectorAll('.goal-emoji-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('goal-name').value   = goal.name;
+  document.getElementById('goal-amount').value = goal.amount;
+  calculateGoal();
+}
+
+function calculateGoal() {
+  const name     = document.getElementById('goal-name').value.trim() || 'Apna Goal';
+  const amount   = parseFloat(document.getElementById('goal-amount').value) || 0;
+  const monthly  = parseFloat(document.getElementById('goal-monthly').value) || 5000;
+  if (!amount) { toast('Goal amount daalo bhai! 😅','error'); return; }
+
+  const rateAnnual = 0.12; // 12% CAGR
+  const rateMonthly = rateAnnual / 12;
+
+  // With just savings (0% return)
+  const monthsSimple = Math.ceil(amount / monthly);
+  // With SIP at 12%
+  let monthsSIP = 0, sipVal = 0;
+  while (sipVal < amount && monthsSIP < 600) {
+    sipVal = monthly * ((Math.pow(1+rateMonthly, monthsSIP+1) - 1) / rateMonthly);
+    monthsSIP++;
+  }
+
+  const fmtMonths = m => m >= 12 ? `${Math.floor(m/12)} saal ${m%12 ? m%12+' mahine' : ''}` : `${m} mahine`;
+  const monthly10pct = Math.round(monthly * 1.1);
+  const stepupSavings = Math.max(0, monthsSIP - Math.ceil(monthsSIP * 0.8));
+
+  const resultEl = document.getElementById('goal-result');
+  resultEl.classList.remove('hide');
+  resultEl.innerHTML = `
+    <div class="goal-result-title">🎯 Plan for: ${name} (${formatINR(amount)})</div>
+    <div class="goal-plan-grid">
+      <div class="goal-plan-item">
+        <div class="goal-plan-label">Simple Savings</div>
+        <div class="goal-plan-val">${fmtMonths(monthsSimple)}</div>
+        <div class="goal-plan-sub">Bina interest ke</div>
+      </div>
+      <div class="goal-plan-item">
+        <div class="goal-plan-label">SIP at 12% CAGR</div>
+        <div class="goal-plan-val" style="color:#22c55e">${fmtMonths(monthsSIP)}</div>
+        <div class="goal-plan-sub">Market-linked return</div>
+      </div>
+      <div class="goal-plan-item">
+        <div class="goal-plan-label">Step-Up 10%/yr</div>
+        <div class="goal-plan-val" style="color:#14b8a6">${fmtMonths(monthsSIP - stepupSavings)}</div>
+        <div class="goal-plan-sub">Faster with increment</div>
+      </div>
+    </div>
+    <div class="goal-timeline">
+      <div class="goal-step"><div class="goal-step-num">1</div><div class="goal-step-text"><strong>Aaj hi start karo:</strong> ₹${monthly.toLocaleString('en-IN')}/month SIP open karo Kuvera ya Groww pe (free hai, 5 min lagta hai)</div></div>
+      <div class="goal-step"><div class="goal-step-num">2</div><div class="goal-step-text"><strong>Step-Up karo:</strong> Har saal SIP 10% badhao — ${formatINR(monthly)} → ${formatINR(monthly10pct)} next year</div></div>
+      <div class="goal-step"><div class="goal-step-num">3</div><div class="goal-step-text"><strong>Expense cut karo:</strong> Coffee, eating-out kam karo — bas ₹${Math.round(monthly/5*100)/100 > 0 ? (monthly/5).toFixed(0) : 500} kam kharcha = goal ${Math.round(stepupSavings*0.5)} mahine jaldi!</div></div>
+      <div class="goal-step"><div class="goal-step-num">4</div><div class="goal-step-text"><strong>Liquid fund use karo:</strong> Short goals ke liye Parag Parikh Liquid Fund — FD se better, anytime withdraw</div></div>
+    </div>
+    <div style="background:rgba(34,197,94,.1);border:1px solid var(--green-border);border-radius:10px;padding:12px;margin-top:12px;font-size:.82rem;color:var(--green-dark)">
+      💡 <strong>Rupa ka advice:</strong> ${name.toLowerCase().includes('iphone') || name.toLowerCase().includes('phone') ? 'iPhone ke liye 1-2 saal wait karo, toh tak ek EMI-free purchased plan taiyaar hoga. Koi loan mat lena gadgets ke liye!' : `${name} ke liye SIP hi best option hai. Goal-based investing mein discipline aata hai!`}
+    </div>`;
+}
+
+/* ══ CSV UPLOAD ══ */
+function dragOver(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('drag'); }
+function dragLeave()  { document.getElementById('upload-zone').classList.remove('drag'); }
+function dropFile(e)  { e.preventDefault(); dragLeave(); processCSV(e.dataTransfer.files[0]); }
+
+function handleFileUpload(e) { if (e.target.files[0]) processCSV(e.target.files[0]); }
+
+function processCSV(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const text  = e.target.result;
+    const lines = text.split('\n').filter(l=>l.trim());
+    const parsed= [];
+    const errors= [];
+
+    lines.slice(1).forEach((line,i) => {
+      const cols = line.split(',').map(c=>c.trim().replace(/"/g,''));
+      if (cols.length < 3) { errors.push(`Row ${i+2}: Insufficient columns`); return; }
+      const [date, desc, amt, cat] = cols;
+      const amount = parseFloat(amt);
+      if (isNaN(amount)) { errors.push(`Row ${i+2}: Invalid amount "${amt}"`); return; }
+      const catId = CATEGORIES.find(c=>c.name.toLowerCase()===cat?.toLowerCase())?.id || 'shopping';
+      parsed.push({ id:uid(), desc:desc||'Expense', cat:catId, amount, date:date||new Date().toISOString().slice(0,10) });
+    });
+
+    if (!parsed.length) { toast('Koi valid data nahi mila CSV mein! 😞','error'); return; }
+    expenses = [...parsed, ...expenses];
+    saveExpenses();
+    renderExpenses();
+    renderCharts();
+    switchTab('tracker', document.querySelector('.exp-tab'));
+
+    const previewEl = document.getElementById('upload-preview');
+    previewEl.classList.remove('hide');
+    previewEl.innerHTML = `<div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:10px;padding:12px;font-size:.85rem;color:var(--green-dark)">✅ <strong>${parsed.length} expenses imported!</strong>${errors.length?' '+errors.length+' rows skipped.':''}</div>`;
+    toast(`${parsed.length} expenses import ho gaye! 🎉`,'success');
+  };
+  reader.readAsText(file);
+}
+
+/* ══ TABS ══ */
+function switchTab(tab, btn) {
+  document.querySelectorAll('.exp-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.exp-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+/* Helpers */
+function formatINR(v) { return '₹'+Math.round(v||0).toLocaleString('en-IN'); }
+</script>
+</body>
+</html>

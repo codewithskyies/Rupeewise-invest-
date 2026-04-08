@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>/* RupeeWise Dark Mode — no-flash */(function(){try{var d=localStorage.getItem('rw_dark_mode'),p=window.matchMedia('(prefers-color-scheme:dark)').matches;if(d==='true'||(d===null&&p))document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>RupeeWise — Start Investing Without Confusion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+      RupeeWise
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link active">Home</a>
+      <a href="stocks.html" class="nav-link">📈 Stocks</a>
+      <a href="learn.html" class="nav-link">🎓 Learn</a>
+      <span id="nav-dash-wrap" class="hide"><a href="dashboard.html" class="nav-link">📊 Dashboard</a></span>
+    </div>
+    <div class="nav-actions">
+      <button class="dark-toggle" onclick="toggleDarkMode()">🌙</button>
+      <div id="nav-guest-wrap" style="display:flex;gap:8px">
+        <a href="login.html" class="btn btn-outline btn-sm">Sign In</a>
+        <a href="register.html" class="btn btn-primary btn-sm">Get Started →</a>
+      </div>
+      <div id="nav-user-wrap" style="display:none;align-items:center;gap:8px">
+        <span id="nav-uname" style="font-size:.82rem;font-weight:600;color:var(--text-primary)"></span>
+        <div id="nav-uavatar" onclick="location.href='dashboard.html'" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--teal));color:#fff;font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer"></div>
+        <button class="btn btn-outline btn-sm" onclick="doLogout()">Sign Out</button>
+      </div>
+      <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">☰</button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html" class="nav-link">🏠 Home</a>
+    <a href="stocks.html" class="nav-link">📈 Stocks</a>
+    <a href="learn.html" class="nav-link">🎓 Learn</a>
+    <a href="dashboard.html" class="nav-link" id="mob-dash-link" style="display:none">📊 Dashboard</a>
+    <div id="mob-guest" style="display:flex;flex-direction:column;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+      <a href="login.html" class="btn btn-outline" style="justify-content:center">Sign In</a>
+      <a href="register.html" class="btn btn-primary" style="justify-content:center">Get Started →</a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="fade-up">
+        <div class="hero-eyebrow"><span class="pulse-dot"></span> Trusted by 10,000+ investors</div>
+        <h1>Start Investing<br><span class="accent">Without Confusion</span></h1>
+        <p class="hero-desc">RupeeWise simplifies investing with clear guidance, smart tools, and transparent pricing. Build wealth confidently — even if you're just starting out.</p>
+        <div class="hero-ctas">
+          <a href="register.html" class="btn btn-primary btn-lg" id="hero-cta">Get Started Free →</a>
+          <a href="stocks.html" class="btn btn-outline btn-lg">Explore Stocks</a>
+        </div>
+        <div class="hero-rating"><span class="hero-stars">★★★★★</span><span>4.9/5 from 10,000+ users</span></div>
+      </div>
+      <div class="hero-cards fade-up d2">
+        <div class="hero-stat-card">
+          <div class="hero-stat-icon" style="background:#dcfce7">📈</div>
+          <div><div class="hero-stat-label">NIFTY 50</div><div class="hero-stat-value" id="nifty-val">22,540.80</div><div class="hero-stat-sub" id="nifty-chg" style="color:var(--green-dark)">+0.57% today</div></div>
+          <div class="live-dot">LIVE</div>
+        </div>
+        <div class="hero-stat-card">
+          <div class="hero-stat-icon" style="background:#eff6ff">💼</div>
+          <div><div class="hero-stat-label">Avg. Portfolio Return</div><div class="hero-stat-value">+12.5% XIRR</div><div class="hero-stat-sub">This financial year</div></div>
+        </div>
+        <div class="hero-stat-card">
+          <div class="hero-stat-icon" style="background:#fef3c7">🔄</div>
+          <div><div class="hero-stat-label">Monthly SIP Users</div><div class="hero-stat-value">4,28,000+</div><div class="hero-stat-sub">₹850 Cr managed</div></div>
+        </div>
+        <div class="hero-stat-card">
+          <div class="hero-stat-icon" style="background:#f3e8ff">🤖</div>
+          <div><div class="hero-stat-label">AI Finance Assistant</div><div class="hero-stat-value">Ask Rupa</div><div class="hero-stat-sub">Stock advice · SIP help · Tax tips</div></div>
+          <div class="live-dot" style="cursor:pointer" onclick="rwToggleChat()">Chat →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding:36px 0;background:var(--bg)">
+  <div class="container">
+    <div class="quick-links">
+      <a href="stocks.html" class="quick-link-card fade-up d1">
+        <div class="quick-link-icon" style="background:#dcfce7">📈</div>
+        <div><h3>Stock Market</h3><p>Live NIFTY 50 · charts · buy/sell</p></div><span class="quick-link-arrow">→</span>
+      </a>
+      <a href="learn.html" class="quick-link-card fade-up d2">
+        <div class="quick-link-icon" style="background:#eff6ff">🎓</div>
+        <div><h3>Finance Quiz</h3><p>60+ MCQs · SIP, MFs, stocks & tax</p></div><span class="quick-link-arrow">→</span>
+      </a>
+      <a href="dashboard.html" class="quick-link-card fade-up d3">
+        <div class="quick-link-icon" style="background:#fef3c7">📊</div>
+        <div><h3>Your Dashboard</h3><p>Portfolio · Goals · SIPs · Analysis</p></div><span class="quick-link-arrow">→</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="features-section" style="background:var(--bg-hover)">
+  <div class="container">
+    <div class="text-center mb-24">
+      <div class="section-eyebrow">Why RupeeWise</div>
+      <h2 class="section-title">Everything you need to invest smart</h2>
+      <p class="section-sub">From learning the basics to executing your first trade — covered at every step.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card fade-up d1"><div class="feature-icon" style="background:#dcfce7">📈</div><h3>Live Stock Prices</h3><p>Real-time NIFTY 50 with interactive charts, OHLC data, and one-click buy/sell UI.</p></div>
+      <div class="feature-card fade-up d2"><div class="feature-icon" style="background:#eff6ff">🎓</div><h3>MCQ Finance Quiz</h3><p>60+ questions across SIP, mutual funds, stocks, bonds, tax, and personal finance.</p></div>
+      <div class="feature-card fade-up d3"><div class="feature-icon" style="background:#fef3c7">🤖</div><h3>AI Finance Assistant</h3><p>Ask Rupa anything — "best stocks under ₹500", "should I buy TCS", tax tips and more.</p></div>
+      <div class="feature-card fade-up d1"><div class="feature-icon" style="background:#f3e8ff">🎯</div><h3>Goal Tracking</h3><p>Set financial goals, track progress, and link SIPs to goals for automated wealth building.</p></div>
+      <div class="feature-card fade-up d2"><div class="feature-icon" style="background:#dcfce7">👥</div><h3>Multi-User</h3><p>Each user gets an isolated dashboard, portfolio, goals, SIPs and quiz history.</p></div>
+      <div class="feature-card fade-up d3"><div class="feature-icon" style="background:#fef2f2">💰</div><h3>Zero Fees</h3><p>₹0 platform fee · ₹0 brokerage · 0.1% fund expense. Totally transparent.</p></div>
+    </div>
+  </div>
+</section>
+
+<section style="background:linear-gradient(135deg,#22c55e,#14b8a6);padding:60px 0">
+  <div class="container">
+    <div class="text-center mb-24">
+      <h2 style="color:#fff;font-size:2rem;margin-bottom:8px">Trusted by thousands</h2>
+      <p style="color:rgba(255,255,255,.75)">Real investors. Real stories. Real wealth.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+      <div style="background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:22px"><div style="color:#fde68a;margin-bottom:10px">★★★★★</div><p style="color:rgba(255,255,255,.9);font-size:.875rem;line-height:1.7;margin-bottom:14px">"RupeeWise made investing so easy. Started with ₹500/month and now have a proper portfolio!"</p><div style="display:flex;align-items:center;gap:9px"><div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-weight:700;font-size:.75rem;display:flex;align-items:center;justify-content:center">PS</div><div><div style="color:#fff;font-weight:600;font-size:.875rem">Priya Sharma</div><div style="color:rgba(255,255,255,.6);font-size:.73rem">Software Engineer, Pune</div></div></div></div>
+      <div style="background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:22px"><div style="color:#fde68a;margin-bottom:10px">★★★★★</div><p style="color:rgba(255,255,255,.9);font-size:.875rem;line-height:1.7;margin-bottom:14px">"The AI chatbot Rupa answered all my investment questions perfectly. Best finance assistant!"</p><div style="display:flex;align-items:center;gap:9px"><div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-weight:700;font-size:.75rem;display:flex;align-items:center;justify-content:center">RV</div><div><div style="color:#fff;font-weight:600;font-size:.875rem">Rahul Verma</div><div style="color:rgba(255,255,255,.6);font-size:.73rem">Teacher, Delhi</div></div></div></div>
+      <div style="background:rgba(255,255,255,.15);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:22px"><div style="color:#fde68a;margin-bottom:10px">★★★★★</div><p style="color:rgba(255,255,255,.9);font-size:.875rem;line-height:1.7;margin-bottom:14px">"The transparent fee structure + quiz + AI assistant — everything in one platform. Love it!"</p><div style="display:flex;align-items:center;gap:9px"><div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-weight:700;font-size:.75rem;display:flex;align-items:center;justify-content:center">AS</div><div><div style="color:#fff;font-weight:600;font-size:.875rem">Anjali Singh</div><div style="color:rgba(255,255,255,.6);font-size:.73rem">Entrepreneur, Mumbai</div></div></div></div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo" style="margin-bottom:10px;display:inline-flex">
+          <div class="nav-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+          RupeeWise
+        </a>
+        <p>Start investing without confusion. Simple, transparent, and smart.</p>
+        <div class="footer-socials"><button class="social-btn">𝕏</button><button class="social-btn">in</button><button class="social-btn">📸</button></div>
+      </div>
+      <div class="footer-col"><h4>Platform</h4><ul><li><a href="stocks.html">Stocks</a></li><li><a href="learn.html">Finance Quiz</a></li><li><a href="dashboard.html">Dashboard</a></li></ul></div>
+      <div class="footer-col"><h4>Account</h4><ul><li><a href="login.html">Sign In</a></li><li><a href="register.html">Create Account</a></li></ul></div>
+      <div class="footer-col"><h4>Legal</h4><ul><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms</a></li><li><a href="#">SEBI Disclaimer</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">© 2026 RupeeWise. All rights reserved. | Investments are subject to market risks.</div>
+  </div>
+</footer>
+
+<div id="toast-container"></div>
+<script src="script.js"></script>
+<script src="auth.js"></script>
+<script src="api.js"></script>
+<script src="chatbot.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  if (Auth.isLoggedIn()) {
+    const session = Auth.getSession();
+    const u = session.user;
+    const initials = u.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    document.getElementById('nav-guest-wrap').style.display = 'none';
+    document.getElementById('nav-user-wrap').style.display  = 'flex';
+    document.getElementById('nav-uname').textContent   = u.name.split(' ')[0];
+    document.getElementById('nav-uavatar').textContent = initials;
+    document.getElementById('nav-dash-wrap').classList.remove('hide');
+    document.getElementById('mob-dash-link').style.display = '';
+    document.getElementById('mob-guest').style.display = 'none';
+    const cta = document.getElementById('hero-cta');
+    cta.href = 'dashboard.html'; cta.textContent = 'Go to Dashboard →';
+  }
+  try {
+    await StockAPI.init();
+    const idx = StockAPI.getNiftyIndex();
+    document.getElementById('nifty-val').textContent = formatINR(idx.value);
+    const chg = document.getElementById('nifty-chg');
+    chg.textContent = (idx.changePct>=0?'+':'') + idx.changePct.toFixed(2) + '% today';
+    chg.style.color = idx.changePct>=0?'var(--green-dark)':'var(--red)';
+    setInterval(async()=>{
+      const i = StockAPI.getNiftyIndex();
+      document.getElementById('nifty-val').textContent = formatINR(i.value);
+    }, 7000);
+  } catch(e){}
+});
+function doLogout() { Auth.logout(); toast('Signed out','info'); setTimeout(()=>location.reload(),400); }
+</script>
+</body>
+</html>

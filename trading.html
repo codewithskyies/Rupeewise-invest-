@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>/* RupeeWise Dark Mode — no-flash */(function(){try{var d=localStorage.getItem('rw_dark_mode'),p=window.matchMedia('(prefers-color-scheme:dark)').matches;if(d==='true'||(d===null&&p))document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Paper Trading — RupeeWise</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    .trade-root { max-width:1200px; margin:0 auto; padding:20px 18px 80px; }
+
+    /* ── VIRTUAL BALANCE STRIP ── */
+    .balance-strip {
+      background:linear-gradient(135deg,#0f172a 0%,#1a3a2a 100%);
+      border-radius:20px; padding:20px 24px; margin-bottom:20px;
+      display:grid; grid-template-columns:1fr 1fr 1fr 1fr auto; gap:16px; align-items:center;
+    }
+    @media(max-width:768px){ .balance-strip{grid-template-columns:1fr 1fr} }
+    .bs-item-label { font-size:.68rem; font-weight:700; color:rgba(255,255,255,.45); text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }
+    .bs-item-value { font-family:var(--font-display); font-weight:800; font-size:1.25rem; color:#fff; }
+    .bs-item-value.up   { color:#4ade80; }
+    .bs-item-value.down { color:#f87171; }
+    .bs-item-sub  { font-size:.7rem; color:rgba(255,255,255,.4); margin-top:2px; }
+    .reset-btn { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:rgba(255,255,255,.7); border-radius:10px; padding:8px 14px; cursor:pointer; font-size:.78rem; font-weight:600; font-family:var(--font-body); transition:all .18s; white-space:nowrap; }
+    .reset-btn:hover { background:rgba(255,255,255,.2); color:#fff; }
+
+    /* ── MAIN GRID ── */
+    .trade-grid { display:grid; grid-template-columns:1fr 340px; gap:16px; }
+    @media(max-width:900px){ .trade-grid{grid-template-columns:1fr} }
+
+    /* ── STOCK SEARCH ── */
+    .trade-card { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:18px; }
+    .stock-search-wrap { position:relative; margin-bottom:12px; }
+    .stock-search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:var(--text-muted); }
+    .stock-search { width:100%; padding:10px 12px 10px 38px; border:1.5px solid var(--border); border-radius:10px; font-family:var(--font-body); font-size:.875rem; background:var(--bg); color:var(--text-primary); outline:none; transition:border .18s; }
+    .stock-search:focus { border-color:var(--green); }
+    .stock-results { display:flex; flex-direction:column; gap:4px; max-height:320px; overflow-y:auto; }
+    .stock-result-item {
+      display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px;
+      cursor:pointer; transition:all .18s; border:1px solid transparent;
+    }
+    .stock-result-item:hover { background:var(--bg-hover); border-color:var(--green-border); }
+    .stock-result-item.selected { background:var(--green-bg); border-color:var(--green); }
+    .sri-logo { width:32px; height:32px; border-radius:8px; background:var(--bg-hover); display:flex; align-items:center; justify-content:center; font-size:.62rem; font-weight:800; color:var(--text-secondary); font-family:var(--font-display); flex-shrink:0; }
+    .sri-symbol { font-weight:700; font-size:.82rem; }
+    .sri-name   { font-size:.72rem; color:var(--text-muted); }
+    .sri-price  { font-weight:800; font-size:.875rem; font-family:var(--font-display); margin-left:auto; white-space:nowrap; }
+    .sri-change { font-size:.72rem; font-weight:600; text-align:right; }
+
+    /* ── CHART ── */
+    .chart-card { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:18px; margin-bottom:14px; }
+    .chart-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+    .selected-stock-name { font-size:1rem; font-weight:700; }
+    .selected-stock-price { font-family:var(--font-display); font-weight:800; font-size:1.5rem; }
+    .selected-stock-change { font-size:.82rem; font-weight:600; margin-top:2px; }
+    .period-row { display:flex; gap:4px; }
+    .period-pill { border:1.5px solid var(--border); border-radius:999px; padding:4px 10px; font-size:.72rem; font-weight:600; color:var(--text-secondary); cursor:pointer; background:none; font-family:var(--font-body); transition:all .18s; }
+    .period-pill.active { background:var(--green); border-color:var(--green); color:#fff; }
+
+    /* ── ORDER PANEL ── */
+    .order-panel { background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:18px; position:sticky; top:80px; }
+    .order-type-tabs { display:flex; border-radius:10px; overflow:hidden; border:1.5px solid var(--border); margin-bottom:16px; }
+    .order-type-tab { flex:1; text-align:center; padding:9px; border:none; background:none; font-family:var(--font-body); font-size:.82rem; font-weight:700; cursor:pointer; transition:all .18s; }
+    .order-type-tab.buy  { }
+    .order-type-tab.buy.active  { background:#22c55e; color:#fff; }
+    .order-type-tab.sell { }
+    .order-type-tab.sell.active { background:#ef4444; color:#fff; }
+    .order-field { margin-bottom:12px; }
+    .order-field label { font-size:.75rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:5px; }
+    .order-input { width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:10px; font-family:var(--font-body); font-size:.875rem; background:var(--bg); color:var(--text-primary); outline:none; transition:border .18s; }
+    .order-input:focus { border-color:var(--green); }
+    .order-total-strip { background:var(--bg-hover); border-radius:10px; padding:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; }
+    .order-total-label { font-size:.78rem; color:var(--text-secondary); font-weight:600; }
+    .order-total-value { font-family:var(--font-display); font-weight:800; font-size:1.1rem; }
+    .order-btn { width:100%; padding:13px; border:none; border-radius:12px; font-family:var(--font-display); font-weight:800; font-size:.95rem; cursor:pointer; transition:all .2s; }
+    .order-btn.buy  { background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; box-shadow:0 3px 12px rgba(34,197,94,.3); }
+    .order-btn.sell { background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; box-shadow:0 3px 12px rgba(239,68,68,.3); }
+    .order-btn:hover { transform:translateY(-1px); }
+    .order-btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+
+    /* Margin info */
+    .margin-info { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+    .margin-item { background:var(--bg-hover); border-radius:8px; padding:8px 10px; }
+    .margin-item label { font-size:.65rem; color:var(--text-muted); font-weight:600; display:block; margin-bottom:2px; }
+    .margin-item span  { font-weight:700; font-size:.85rem; }
+
+    /* ── HOLDINGS TABLE ── */
+    .hold-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+    .hold-table th { text-align:left; font-size:.66rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; padding:8px 10px; border-bottom:2px solid var(--border); }
+    .hold-table td { padding:10px 10px; border-bottom:1px solid var(--border-light); }
+    .hold-table tr:hover td { background:var(--bg-hover); }
+    .sell-quick { background:#fef2f2; color:#ef4444; border:none; border-radius:7px; padding:4px 10px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:var(--font-body); transition:all .18s; }
+    .sell-quick:hover { background:#ef4444; color:#fff; }
+
+    /* ── ORDER HISTORY ── */
+    .order-hist-item { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--bg-hover); border-radius:10px; margin-bottom:7px; font-size:.82rem; }
+    .order-hist-badge { padding:3px 8px; border-radius:5px; font-size:.68rem; font-weight:800; }
+    .order-hist-badge.BUY  { background:#dcfce7; color:#16a34a; }
+    .order-hist-badge.SELL { background:#fee2e2; color:#dc2626; }
+
+    /* ── AI SUGGESTION PANEL ── */
+    .ai-suggest { background:linear-gradient(135deg,#f0fdf4,#eff6ff); border:1px solid var(--green-border); border-radius:14px; padding:16px; margin-top:12px; }
+    .ai-suggest-title { font-size:.82rem; font-weight:700; color:var(--green-dark); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+    .ai-suggest-text  { font-size:.8rem; color:var(--text-secondary); line-height:1.65; }
+
+    /* LIVE badge */
+    .live-badge { display:inline-flex; align-items:center; gap:4px; background:#dcfce7; color:#15803d; font-size:.65rem; font-weight:800; padding:2px 7px; border-radius:999px; }
+    .live-badge::before { content:''; width:5px; height:5px; background:#22c55e; border-radius:50%; animation:pulse 1.5s infinite; }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+      RupeeWise
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="stocks.html" class="nav-link">📈 Stocks</a>
+      <a href="expense.html" class="nav-link">💸 Expense</a>
+      <a href="trading.html" class="nav-link active">🎮 Trade</a>
+      <a href="learn.html" class="nav-link">🎓 Learn</a>
+      <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+    </div>
+    <div class="nav-actions">
+      <button class="dark-toggle" onclick="toggleDarkMode()">🌙</button>
+      <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">☰</button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html" class="nav-link">🏠 Home</a>
+    <a href="stocks.html" class="nav-link">📈 Stocks</a>
+    <a href="expense.html" class="nav-link">💸 Expense</a>
+    <a href="trading.html" class="nav-link active">🎮 Trade Sim</a>
+    <a href="learn.html" class="nav-link">🎓 Learn</a>
+    <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+  </div>
+</nav>
+
+<div class="trade-root">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+    <div>
+      <h1 style="font-size:1.6rem;margin-bottom:4px">🎮 Paper Trading Simulator</h1>
+      <p style="color:var(--text-secondary);font-size:.875rem">Virtual ₹1 Lakh se real market conditions mein trade karo — zero risk! <span class="live-badge">LIVE PRICES</span></p>
+    </div>
+  </div>
+
+  <!-- Balance Strip -->
+  <div class="balance-strip">
+    <div><div class="bs-item-label">Virtual Cash</div><div class="bs-item-value" id="bs-cash">₹1,00,000</div><div class="bs-item-sub">Available to trade</div></div>
+    <div><div class="bs-item-label">Portfolio Value</div><div class="bs-item-value" id="bs-port">₹0</div><div class="bs-item-sub">Holdings MTM</div></div>
+    <div><div class="bs-item-label">Total P&L</div><div class="bs-item-value up" id="bs-pnl">₹0</div><div class="bs-item-sub" id="bs-pnl-pct">0.00%</div></div>
+    <div><div class="bs-item-label">Net Worth</div><div class="bs-item-value" id="bs-net">₹1,00,000</div><div class="bs-item-sub">Cash + Holdings</div></div>
+    <button class="reset-btn" onclick="resetPortfolio()">🔄 Reset</button>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="trade-grid">
+
+    <!-- Left: Chart + Stock List + Holdings -->
+    <div>
+      <!-- Chart Card -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="selected-stock-name" id="sel-name">Select a Stock</div>
+            </div>
+            <div class="selected-stock-price" id="sel-price">—</div>
+            <div class="selected-stock-change" id="sel-change" style="color:var(--text-muted)">Click any stock below to view</div>
+          </div>
+          <div>
+            <div class="period-row" id="period-row">
+              <button class="period-pill active" onclick="changePeriod('1D',this)">1D</button>
+              <button class="period-pill" onclick="changePeriod('1W',this)">1W</button>
+              <button class="period-pill" onclick="changePeriod('1M',this)">1M</button>
+              <button class="period-pill" onclick="changePeriod('3M',this)">3M</button>
+              <button class="period-pill" onclick="changePeriod('1Y',this)">1Y</button>
+            </div>
+          </div>
+        </div>
+        <div style="position:relative;height:220px">
+          <canvas id="trade-chart"></canvas>
+          <div id="chart-placeholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.875rem;flex-direction:column;gap:8px">
+            <div style="font-size:2rem">📈</div>
+            <div>Koi stock select karo</div>
+          </div>
+        </div>
+        <!-- AI Suggestion -->
+        <div class="ai-suggest hide" id="ai-suggest">
+          <div class="ai-suggest-title">🤖 Rupa ka AI Analysis</div>
+          <div class="ai-suggest-text" id="ai-suggest-text"></div>
+        </div>
+      </div>
+
+      <!-- Stock Search & List -->
+      <div class="trade-card" style="margin-bottom:14px">
+        <h3 style="font-size:.92rem;margin-bottom:10px">📊 NIFTY 50 Stocks</h3>
+        <div class="stock-search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" class="stock-search" id="stock-search" placeholder="Stock dhundo — TCS, INFY, HDFC..." oninput="filterStocks(this.value)"/>
+        </div>
+        <div class="stock-results" id="stock-results">
+          <div style="text-align:center;padding:24px;color:var(--text-muted)">⏳ Loading stocks...</div>
+        </div>
+      </div>
+
+      <!-- Holdings -->
+      <div class="trade-card">
+        <h3 style="font-size:.92rem;margin-bottom:12px">💼 Mera Virtual Portfolio</h3>
+        <div id="holdings-section">
+          <div style="text-align:center;padding:24px;color:var(--text-muted);font-size:.875rem">
+            <div style="font-size:2rem;margin-bottom:6px">💼</div>
+            Abhi koi holdings nahi. Kharido kuch!
+          </div>
+        </div>
+      </div>
+
+      <!-- Order History -->
+      <div class="trade-card" style="margin-top:14px">
+        <h3 style="font-size:.92rem;margin-bottom:12px">📋 Order History</h3>
+        <div id="order-history">
+          <div style="text-align:center;padding:18px;color:var(--text-muted);font-size:.875rem">Koi orders nahi abhi</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Order Panel -->
+    <div>
+      <div class="order-panel">
+        <h3 style="font-size:.95rem;margin-bottom:12px">🛒 Place Order</h3>
+        <div class="order-type-tabs">
+          <button class="order-type-tab buy active" id="tab-buy" onclick="setOrderType('BUY')">BUY</button>
+          <button class="order-type-tab sell" id="tab-sell" onclick="setOrderType('SELL')">SELL</button>
+        </div>
+
+        <div class="order-field">
+          <label>Selected Stock</label>
+          <div style="padding:10px 12px;background:var(--bg-hover);border-radius:10px;font-size:.875rem;font-weight:600" id="order-stock-name">— Pehle stock choose karo</div>
+        </div>
+
+        <div class="order-field">
+          <label>Price (₹)</label>
+          <input type="number" class="order-input" id="order-price" placeholder="Market price" readonly style="background:var(--bg-hover)"/>
+        </div>
+
+        <div class="order-field">
+          <label>Quantity (shares)</label>
+          <input type="number" class="order-input" id="order-qty" placeholder="1" min="1" value="1" oninput="updateOrderTotal()"/>
+        </div>
+
+        <!-- Margin info -->
+        <div class="margin-info">
+          <div class="margin-item"><label>Available Cash</label><span id="avail-cash">₹1,00,000</span></div>
+          <div class="margin-item"><label>Max Qty</label><span id="max-qty">—</span></div>
+        </div>
+
+        <div class="order-total-strip">
+          <div class="order-total-label" id="order-total-label">Order Value</div>
+          <div class="order-total-value" id="order-total">₹0</div>
+        </div>
+
+        <button class="order-btn buy" id="order-btn" onclick="placeOrder()" disabled>
+          Select a Stock First
+        </button>
+
+        <div style="margin-top:12px;text-align:center;font-size:.72rem;color:var(--text-muted)">
+          ⚠️ Yeh virtual/paper trading hai. Real money nahi lagta!
+        </div>
+      </div>
+
+      <!-- Leaderboard style stats -->
+      <div class="trade-card" style="margin-top:14px">
+        <h3 style="font-size:.88rem;margin-bottom:12px">🏆 Trading Stats</h3>
+        <div id="trade-stats" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="script.js"></script>
+<script src="auth.js"></script>
+<script src="api.js"></script>
+<script src="chatbot.js"></script>
+<script>
+'use strict';
+
+/* ══ STATE ══ */
+const INITIAL_CASH = 100000;
+let portfolio = JSON.parse(localStorage.getItem('rw_paper_portfolio') || JSON.stringify({
+  cash:     INITIAL_CASH,
+  holdings: {},  // { SYMBOL: { qty, avgPrice } }
+  orders:   [],
+}));
+let allStocks     = [];
+let selectedStock = null;
+let orderType     = 'BUY';
+let tradeChart    = null;
+let currentPeriod = '1D';
+
+/* ══ INIT ══ */
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    allStocks = await StockAPI.init();
+    renderStockList(allStocks);
+    updateBalance();
+    renderHoldings();
+    renderOrderHistory();
+    renderTradeStats();
+    // Live price updates
+    StockAPI.startLivePolling(updated => {
+      allStocks = updated;
+      renderStockList(filterVal());
+      updateBalance();
+      renderHoldings();
+      if (selectedStock) {
+        selectedStock = allStocks.find(s=>s.symbol===selectedStock.symbol);
+        updateSelectedDisplay();
+      }
+    });
+  } catch(e) {
+    console.error(e);
+    toast('Stock data load nahi hua. Refresh karo!','error');
+  }
+});
+
+function filterVal() { return document.getElementById('stock-search').value.trim(); }
+
+/* ══ STOCK LIST ══ */
+function renderStockList(stocks) {
+  const container = document.getElementById('stock-results');
+  const q = typeof stocks === 'string' ? stocks : '';
+  const list = typeof stocks === 'string'
+    ? StockAPI.searchStocks(stocks)
+    : allStocks;
+
+  if (!list.length) {
+    container.innerHTML = `<div style="text-align:center;padding:18px;color:var(--text-muted)">Koi stock nahi mila</div>`;
+    return;
+  }
+  container.innerHTML = list.slice(0,15).map(s => {
+    const up = s.changePct >= 0;
+    const isSelected = selectedStock?.symbol === s.symbol;
+    return `<div class="stock-result-item ${isSelected?'selected':''}" onclick="selectStock('${s.symbol}')">
+      <div class="sri-logo">${s.logo}</div>
+      <div style="flex:1">
+        <div class="sri-symbol">${s.symbol}</div>
+        <div class="sri-name">${s.name}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sri-price">₹${s.price.toLocaleString('en-IN',{maximumFractionDigits:2})}</div>
+        <div class="sri-change" style="color:${up?'var(--green-dark)':'var(--red)'}">${up?'+':''}${s.changePct.toFixed(2)}%</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterStocks(q) {
+  if (!q) { renderStockList(allStocks); return; }
+  renderStockList(StockAPI.searchStocks(q));
+}
+
+/* ══ SELECT STOCK ══ */
+async function selectStock(symbol) {
+  selectedStock = allStocks.find(s=>s.symbol===symbol);
+  if (!selectedStock) return;
+  updateSelectedDisplay();
+  renderStockList(filterVal());
+  document.getElementById('order-stock-name').textContent = `${selectedStock.name} (${selectedStock.symbol})`;
+  document.getElementById('order-price').value = selectedStock.price.toFixed(2);
+  document.getElementById('order-btn').disabled = false;
+  updateOrderTotal();
+  updateMaxQty();
+  await loadTradeChart(currentPeriod);
+  showAISuggestion();
+}
+
+function updateSelectedDisplay() {
+  if (!selectedStock) return;
+  const up = selectedStock.changePct >= 0;
+  document.getElementById('sel-name').textContent    = `${selectedStock.name} (${selectedStock.symbol})`;
+  document.getElementById('sel-price').textContent   = `₹${selectedStock.price.toLocaleString('en-IN',{minimumFractionDigits:2})}`;
+  document.getElementById('sel-change').textContent  = `${up?'▲':'▼'} ${up?'+':''}${selectedStock.changePct.toFixed(2)}% today`;
+  document.getElementById('sel-change').style.color  = up?'var(--green-dark)':'var(--red)';
+  document.getElementById('chart-placeholder').style.display = 'none';
+}
+
+/* ══ CHART ══ */
+async function loadTradeChart(period) {
+  if (!selectedStock) return;
+  const data = await StockAPI.getHistoricalData(selectedStock.symbol, period);
+  const labels = data.map(d=>d.time);
+  const prices = data.map(d=>d.close);
+  const up     = prices[prices.length-1] >= prices[0];
+  const color  = up ? '#22c55e' : '#ef4444';
+
+  if (tradeChart) tradeChart.destroy();
+  const ctx = document.getElementById('trade-chart').getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,0,220);
+  grad.addColorStop(0, up?'rgba(34,197,94,.18)':'rgba(239,68,68,.18)');
+  grad.addColorStop(1,'rgba(0,0,0,0)');
+
+  tradeChart = new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[{data:prices,borderColor:color,borderWidth:2.5,fill:true,backgroundColor:grad,tension:.35,pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:color}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+v.raw.toLocaleString('en-IN',{minimumFractionDigits:2})}}},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:10}}},y:{position:'right',ticks:{callback:v=>'₹'+(v/1000).toFixed(0)+'K',font:{size:10},maxTicksLimit:5}}}}
+  });
+}
+
+function changePeriod(period, btn) {
+  currentPeriod = period;
+  document.querySelectorAll('.period-pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  loadTradeChart(period);
+}
+
+/* ══ AI SUGGESTION ══ */
+function showAISuggestion() {
+  const s = selectedStock;
+  if (!s) return;
+  const el = document.getElementById('ai-suggest');
+  const txt = document.getElementById('ai-suggest-text');
+  el.classList.remove('hide');
+  const holding = portfolio.holdings[s.symbol];
+  const rec = s.changePct > 0 ? 'bullish momentum dikh raha hai' : 'bearish zone mein hai thoda';
+  const advice = holding
+    ? `Tu already ${holding.qty} shares hold kar raha hai. Average price ₹${holding.avgPrice.toFixed(0)} hai. Current ₹${s.price.toFixed(0)} — P&L: ${((s.price-holding.avgPrice)/holding.avgPrice*100).toFixed(1)}%`
+    : `${s.name} ka P/E ${s.pe}x hai. Fundamentally ${s.pe < 20 ? 'undervalued' : s.pe < 35 ? 'fairly valued' : 'premium pe trade kar raha hai'}.`;
+  txt.textContent = `📊 ${s.symbol} ${rec}. ${advice} 💡 Paper trading mein try karo pehle!`;
+}
+
+/* ══ ORDER ══ */
+function setOrderType(type) {
+  orderType = type;
+  document.getElementById('tab-buy').classList.toggle('active', type==='BUY');
+  document.getElementById('tab-sell').classList.toggle('active', type==='SELL');
+  document.getElementById('order-btn').className = `order-btn ${type.toLowerCase()}`;
+  document.getElementById('order-btn').textContent = `${type === 'BUY' ? '💚 Buy karo!' : '🔴 Sell karo!'}`;
+  updateOrderTotal();
+  updateMaxQty();
+}
+
+function updateOrderTotal() {
+  if (!selectedStock) return;
+  const qty   = parseInt(document.getElementById('order-qty').value) || 1;
+  const price = selectedStock.price;
+  const total = qty * price;
+  document.getElementById('order-total').textContent      = '₹' + total.toLocaleString('en-IN',{maximumFractionDigits:0});
+  document.getElementById('order-total-label').textContent = orderType==='BUY' ? `You'll Pay` : `You'll Get`;
+  const btn = document.getElementById('order-btn');
+  if (orderType==='BUY' && total > portfolio.cash) { btn.disabled=true; btn.textContent='Paisa nahi hai! 💸'; }
+  else { btn.disabled=false; btn.textContent= orderType==='BUY' ? '💚 Buy karo!' : '🔴 Sell karo!'; }
+}
+
+function updateMaxQty() {
+  if (!selectedStock) return;
+  const max = orderType==='BUY'
+    ? Math.floor(portfolio.cash / selectedStock.price)
+    : (portfolio.holdings[selectedStock.symbol]?.qty || 0);
+  document.getElementById('max-qty').textContent = max + ' shares';
+}
+
+function placeOrder() {
+  if (!selectedStock) return;
+  const qty   = parseInt(document.getElementById('order-qty').value) || 1;
+  if (qty < 1) { toast('Quantity 1 se zyada honi chahiye!','error'); return; }
+  const price = selectedStock.price;
+  const total = qty * price;
+  const sym   = selectedStock.symbol;
+
+  if (orderType === 'BUY') {
+    if (total > portfolio.cash) { toast('Itna paisa nahi hai bhai! 😅','error'); return; }
+    portfolio.cash -= total;
+    const existing = portfolio.holdings[sym];
+    if (existing) {
+      const newQty = existing.qty + qty;
+      existing.avgPrice = ((existing.avgPrice * existing.qty) + total) / newQty;
+      existing.qty = newQty;
+    } else {
+      portfolio.holdings[sym] = { qty, avgPrice:price, name:selectedStock.name };
+    }
+    toast(`✅ ${qty} shares of ${sym} @ ₹${price.toFixed(0)} khareed liya!`,'success');
+  } else {
+    const h = portfolio.holdings[sym];
+    if (!h || h.qty < qty) { toast(`Sirf ${h?.qty||0} shares hain tere paas!`,'error'); return; }
+    portfolio.cash += total;
+    h.qty -= qty;
+    if (h.qty === 0) delete portfolio.holdings[sym];
+    toast(`✅ ${qty} shares of ${sym} @ ₹${price.toFixed(0)} bech diya!`,'success');
+  }
+
+  portfolio.orders.unshift({ type:orderType, symbol:sym, qty, price, total, time:new Date().toLocaleTimeString('en-IN') });
+  savePortfolio();
+  updateBalance();
+  renderHoldings();
+  renderOrderHistory();
+  renderTradeStats();
+  document.getElementById('order-qty').value = '1';
+  updateOrderTotal();
+  updateMaxQty();
+}
+
+/* ══ BALANCE ══ */
+function updateBalance() {
+  let portVal = 0;
+  Object.entries(portfolio.holdings).forEach(([sym,h]) => {
+    const s = allStocks.find(x=>x.symbol===sym);
+    if (s) portVal += s.price * h.qty;
+  });
+  const netWorth = portfolio.cash + portVal;
+  const pnl      = netWorth - INITIAL_CASH;
+  const pnlPct   = ((pnl / INITIAL_CASH) * 100).toFixed(2);
+
+  document.getElementById('bs-cash').textContent   = '₹'+portfolio.cash.toLocaleString('en-IN',{maximumFractionDigits:0});
+  document.getElementById('bs-port').textContent   = '₹'+portVal.toLocaleString('en-IN',{maximumFractionDigits:0});
+  document.getElementById('bs-net').textContent    = '₹'+netWorth.toLocaleString('en-IN',{maximumFractionDigits:0});
+  document.getElementById('bs-pnl').textContent    = (pnl>=0?'+':'')+'₹'+Math.abs(pnl).toLocaleString('en-IN',{maximumFractionDigits:0});
+  document.getElementById('bs-pnl').className      = 'bs-item-value '+(pnl>=0?'up':'down');
+  document.getElementById('bs-pnl-pct').textContent= (pnl>=0?'+':'')+pnlPct+'%';
+  document.getElementById('avail-cash').textContent= '₹'+portfolio.cash.toLocaleString('en-IN',{maximumFractionDigits:0});
+}
+
+/* ══ HOLDINGS ══ */
+function renderHoldings() {
+  const el = document.getElementById('holdings-section');
+  const entries = Object.entries(portfolio.holdings);
+  if (!entries.length) {
+    el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:.875rem"><div style="font-size:1.8rem;margin-bottom:6px">💼</div>Abhi koi holdings nahi. Kharido kuch!</div>`;
+    return;
+  }
+  el.innerHTML = `<div style="overflow-x:auto"><table class="hold-table">
+    <thead><tr><th>Stock</th><th>Qty</th><th>Avg</th><th>LTP</th><th>P&L</th><th></th></tr></thead>
+    <tbody>${entries.map(([sym,h])=>{
+      const s = allStocks.find(x=>x.symbol===sym);
+      if (!s) return '';
+      const pnl    = (s.price - h.avgPrice) * h.qty;
+      const pnlPct = ((s.price - h.avgPrice)/h.avgPrice*100).toFixed(1);
+      const up     = pnl >= 0;
+      return `<tr>
+        <td><div style="font-weight:700;font-size:.82rem">${sym}</div><div style="font-size:.68rem;color:var(--text-muted)">${h.name.split(' ').slice(0,2).join(' ')}</div></td>
+        <td>${h.qty}</td>
+        <td>₹${h.avgPrice.toFixed(0)}</td>
+        <td style="font-weight:700">₹${s.price.toFixed(0)}</td>
+        <td style="color:${up?'var(--green-dark)':'var(--red)'};font-weight:700">
+          ${up?'+':''}₹${Math.abs(pnl).toFixed(0)}<br>
+          <span style="font-size:.68rem">${up?'+':''}${pnlPct}%</span>
+        </td>
+        <td><button class="sell-quick" onclick="quickSell('${sym}')">Sell</button></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+function quickSell(sym) {
+  selectStock(sym);
+  setOrderType('SELL');
+  const h = portfolio.holdings[sym];
+  if (h) document.getElementById('order-qty').value = h.qty;
+  updateOrderTotal();
+  window.scrollTo(0,0);
+}
+
+/* ══ ORDER HISTORY ══ */
+function renderOrderHistory() {
+  const el = document.getElementById('order-history');
+  if (!portfolio.orders.length) { el.innerHTML='<div style="text-align:center;padding:14px;color:var(--text-muted);font-size:.875rem">Koi orders nahi abhi</div>'; return; }
+  el.innerHTML = portfolio.orders.slice(0,8).map(o=>`
+    <div class="order-hist-item">
+      <span class="order-hist-badge ${o.type}">${o.type}</span>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:.82rem">${o.symbol}</div>
+        <div style="font-size:.7rem;color:var(--text-muted)">${o.qty} shares @ ₹${o.price.toFixed(0)}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:700;font-size:.82rem">₹${o.total.toLocaleString('en-IN',{maximumFractionDigits:0})}</div>
+        <div style="font-size:.68rem;color:var(--text-muted)">${o.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ══ TRADE STATS ══ */
+function renderTradeStats() {
+  const buys  = portfolio.orders.filter(o=>o.type==='BUY').length;
+  const sells = portfolio.orders.filter(o=>o.type==='SELL').length;
+  const hold  = Object.keys(portfolio.holdings).length;
+  const netWorth  = portfolio.cash + Object.entries(portfolio.holdings).reduce((a,[sym,h])=>{
+    const s=allStocks.find(x=>x.symbol===sym); return a+(s?s.price*h.qty:h.avgPrice*h.qty);
+  },0);
+  const pnl = netWorth - INITIAL_CASH;
+  const el  = document.getElementById('trade-stats');
+  el.innerHTML = [
+    { label:'Total Trades',   val:portfolio.orders.length },
+    { label:'Buys',           val:buys },
+    { label:'Sells',          val:sells },
+    { label:'Holdings',       val:hold+' stocks' },
+    { label:'Total P&L',      val:(pnl>=0?'+':'')+'₹'+Math.abs(pnl).toLocaleString('en-IN',{maximumFractionDigits:0}), color:pnl>=0?'var(--green-dark)':'var(--red)' },
+  ].map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-light)">
+    <span style="font-size:.78rem;color:var(--text-secondary)">${s.label}</span>
+    <span style="font-weight:700;font-size:.85rem;${s.color?'color:'+s.color:''}">${s.val}</span>
+  </div>`).join('');
+}
+
+/* ══ RESET ══ */
+function resetPortfolio() {
+  if (!confirm('Sab reset karo? Virtual portfolio wapas ₹1 Lakh se start hoga!')) return;
+  portfolio = { cash:INITIAL_CASH, holdings:{}, orders:[] };
+  savePortfolio();
+  updateBalance();
+  renderHoldings();
+  renderOrderHistory();
+  renderTradeStats();
+  toast('Portfolio reset ho gaya! Naye sire se shuru karo 🚀','info');
+}
+
+function savePortfolio() { localStorage.setItem('rw_paper_portfolio',JSON.stringify(portfolio)); }
+</script>
+</body>
+</html>

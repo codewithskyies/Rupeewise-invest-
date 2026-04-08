@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>/* RupeeWise Dark Mode — no-flash */(function(){try{var d=localStorage.getItem('rw_dark_mode'),p=window.matchMedia('(prefers-color-scheme:dark)').matches;if(d==='true'||(d===null&&p))document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Dashboard — RupeeWise</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    /* ── DASHBOARD LAYOUT ─────────────────────────────────── */
+    body { overflow-x:hidden; }
+    .dash-root { display:flex; min-height:calc(100vh - var(--nav-h)); }
+
+    /* Sidebar */
+    .dash-sidebar {
+      width:220px; background:var(--bg-card); border-right:1px solid var(--border);
+      display:flex; flex-direction:column; flex-shrink:0; position:sticky;
+      top:var(--nav-h); height:calc(100vh - var(--nav-h)); overflow-y:auto;
+    }
+    @media(max-width:900px){ .dash-sidebar{display:none} }
+
+    .sidebar-user {
+      padding:16px 14px 12px; border-bottom:1px solid var(--border);
+    }
+    .sidebar-user-card {
+      display:flex; align-items:center; gap:10px;
+      background:var(--bg-hover); border-radius:12px; padding:10px 12px;
+    }
+    .sidebar-avatar {
+      width:36px; height:36px; border-radius:50%;
+      background:linear-gradient(135deg,var(--green),var(--teal));
+      color:#fff; font-size:.85rem; font-weight:800; font-family:var(--font-display);
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .sidebar-user-name  { font-size:.82rem; font-weight:700; color:var(--text-primary); }
+    .sidebar-user-plan  { font-size:.68rem; color:var(--green-dark); font-weight:600; }
+    .online-dot { width:8px; height:8px; background:var(--green); border-radius:50%; border:1.5px solid var(--bg-card); margin-left:auto; flex-shrink:0; }
+
+    .sidebar-section { padding:6px 10px 2px; font-size:.65rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.08em; }
+    .sidebar-item {
+      display:flex; align-items:center; gap:9px; padding:8px 12px; border-radius:9px;
+      border:none; background:none; width:100%; text-align:left; font-size:.83rem;
+      font-weight:500; color:var(--text-secondary); cursor:pointer;
+      font-family:var(--font-body); transition:all .18s; margin:1px 8px; width:calc(100% - 16px);
+    }
+    .sidebar-item:hover { background:var(--bg-hover); color:var(--text-primary); }
+    .sidebar-item.active { background:var(--green-bg); color:var(--green-dark); font-weight:700; }
+    .sidebar-item svg { width:16px; height:16px; flex-shrink:0; opacity:.8; }
+    .sidebar-item.active svg { opacity:1; }
+    .sidebar-badge { margin-left:auto; background:var(--green); color:#fff; font-size:.62rem; font-weight:800; padding:1px 6px; border-radius:999px; }
+    .sidebar-bottom { margin-top:auto; padding:10px; border-top:1px solid var(--border); }
+    .sidebar-logout { width:100%; display:flex; align-items:center; gap:8px; padding:8px 12px; border-radius:9px; border:none; background:none; color:#ef4444; font-size:.82rem; font-weight:600; cursor:pointer; font-family:var(--font-body); transition:all .18s; }
+    .sidebar-logout:hover { background:#fef2f2; }
+
+    /* Main content */
+    .dash-main { flex:1; overflow-y:auto; padding:24px; max-width:calc(100vw - 220px); }
+    @media(max-width:900px){ .dash-main{max-width:100%;padding:16px} }
+
+    /* Tabs (content) */
+    .tab-content { display:none; }
+    .tab-content.active { display:block; animation:fadeUp .4s ease both; }
+
+    /* Mobile bottom nav */
+    .mobile-bottom-nav {
+      display:none; position:fixed; bottom:0; left:0; right:0; z-index:200;
+      background:var(--bg-card); border-top:1px solid var(--border);
+      padding:8px 0 12px;
+    }
+    @media(max-width:900px){ .mobile-bottom-nav{display:flex;justify-content:space-around} }
+    .mob-nav-item {
+      display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 12px;
+      background:none; border:none; cursor:pointer; font-family:var(--font-body);
+      color:var(--text-muted); font-size:.65rem; font-weight:600; border-radius:10px; transition:all .18s;
+    }
+    .mob-nav-item.active { color:var(--green-dark); }
+    .mob-nav-item svg { width:20px; height:20px; }
+
+    /* ── STAT CARDS ──────────────────────────────────────── */
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+    @media(max-width:1100px){ .stats-grid{grid-template-columns:repeat(2,1fr)} }
+    @media(max-width:480px)  { .stats-grid{grid-template-columns:1fr 1fr} }
+    .stat-card {
+      background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg);
+      padding:16px; box-shadow:var(--shadow-sm); transition:all .2s; position:relative; overflow:hidden;
+    }
+    .stat-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+    .stat-label { font-size:.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; }
+    .stat-icon  { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:.85rem; }
+    .stat-value { font-family:var(--font-display); font-weight:800; font-size:1.45rem; color:var(--text-primary); margin-bottom:5px; }
+    .stat-change { font-size:.73rem; font-weight:600; display:flex; align-items:center; gap:3px; }
+    .stat-change.up   { color:var(--green-dark); }
+    .stat-change.down { color:var(--red); }
+
+    /* ── CHARTS ROW ─────────────────────────────────────── */
+    .charts-row { display:grid; grid-template-columns:2fr 1fr; gap:14px; margin-bottom:20px; }
+    @media(max-width:900px){ .charts-row{grid-template-columns:1fr} }
+    .chart-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px; box-shadow:var(--shadow-sm); }
+    .chart-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .chart-header h3 { font-size:.92rem; }
+    .chart-header p  { font-size:.72rem; color:var(--text-muted); margin-top:2px; }
+    .period-tabs { display:flex; gap:2px; background:var(--bg-hover); border-radius:8px; padding:2px; }
+    .period-tab {
+      border:none; background:none; padding:4px 10px; border-radius:6px;
+      font-size:.72rem; font-weight:600; color:var(--text-secondary); cursor:pointer;
+      transition:all .18s; font-family:var(--font-body);
+    }
+    .period-tab.active { background:var(--bg-card); color:var(--green-dark); box-shadow:0 1px 3px rgba(0,0,0,.06); }
+    .alloc-legend { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+    .alloc-item   { display:flex; align-items:center; gap:6px; }
+    .alloc-dot    { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .alloc-name   { font-size:.75rem; color:var(--text-secondary); flex:1; }
+    .alloc-pct    { font-size:.75rem; font-weight:700; }
+
+    /* ── BOTTOM ROW ─────────────────────────────────────── */
+    .bottom-row { display:grid; grid-template-columns:3fr 2fr; gap:14px; margin-bottom:20px; }
+    @media(max-width:900px){ .bottom-row{grid-template-columns:1fr} }
+
+    /* Transaction list */
+    .txn-list { display:flex; flex-direction:column; gap:1px; }
+    .txn-item { display:flex; align-items:center; gap:10px; padding:9px; border-radius:9px; cursor:pointer; transition:all .18s; }
+    .txn-item:hover { background:var(--bg-hover); }
+    .txn-icon { width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:.9rem; flex-shrink:0; }
+    .txn-name  { font-size:.82rem; font-weight:600; }
+    .txn-meta  { font-size:.7rem; color:var(--text-muted); margin-top:1px; }
+    .txn-amount{ font-size:.82rem; font-weight:700; margin-left:auto; white-space:nowrap; }
+
+    /* Goal progress */
+    .goal-bar-wrap { margin-bottom:14px; }
+    .goal-bar-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+    .goal-bar-label { font-size:.82rem; font-weight:600; }
+    .goal-bar-pct   { font-size:.82rem; font-weight:800; color:var(--green-dark); }
+    .goal-bar-track { height:7px; background:var(--bg-hover); border-radius:99px; overflow:hidden; }
+    .goal-bar-fill  { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--green),var(--teal)); transition:width 1.2s ease; }
+    .goal-bar-amounts { display:flex; justify-content:space-between; margin-top:3px; font-size:.7rem; color:var(--text-muted); }
+
+    /* ── PORTFOLIO TABLE ────────────────────────────────── */
+    .port-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+    .port-table th { text-align:left; font-size:.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; padding:9px 10px; border-bottom:2px solid var(--border); }
+    .port-table td { padding:11px 10px; border-bottom:1px solid var(--border-light); }
+    .port-table tr:hover td { background:var(--bg-hover); }
+    .port-logo { width:32px; height:32px; border-radius:8px; background:var(--bg-hover); display:flex; align-items:center; justify-content:center; font-size:.62rem; font-weight:800; color:var(--text-secondary); font-family:var(--font-display); }
+    .port-name { font-weight:700; font-size:.85rem; }
+    .port-sector { font-size:.7rem; color:var(--text-muted); }
+    .bar-mini { width:72px; height:4px; background:var(--border); border-radius:99px; overflow:hidden; }
+    .bar-mini-fill { height:100%; background:var(--green); border-radius:99px; }
+
+    /* ── SIP LIST ───────────────────────────────────────── */
+    .sip-card {
+      background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg);
+      padding:16px; display:flex; align-items:center; gap:12px; transition:all .2s; margin-bottom:10px;
+    }
+    .sip-card:hover { box-shadow:var(--shadow-md); border-color:var(--green-border); }
+    .sip-icon { width:40px; height:40px; border-radius:11px; background:var(--green-bg); display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+    .sip-fund { font-weight:700; font-size:.87rem; }
+    .sip-meta { font-size:.73rem; color:var(--text-muted); margin-top:2px; }
+    .sip-amount { font-family:var(--font-display); font-weight:800; font-size:1.05rem; margin-left:auto; text-align:right; white-space:nowrap; }
+    .sip-actions { display:flex; gap:5px; margin-top:5px; justify-content:flex-end; }
+
+    /* ── GOALS ──────────────────────────────────────────── */
+    .goals-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media(max-width:640px){ .goals-grid{grid-template-columns:1fr} }
+    .goal-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-xl); padding:18px; transition:all .22s; }
+    .goal-card:hover { box-shadow:var(--shadow-md); border-color:var(--green-border); }
+    .goal-card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+    .goal-pct-big { font-size:1.3rem; font-weight:800; font-family:var(--font-display); color:var(--green-dark); }
+    .goal-progress-track { height:7px; background:var(--bg-hover); border-radius:99px; overflow:hidden; margin:10px 0; }
+    .goal-progress-fill  { height:100%; border-radius:99px; background:linear-gradient(90deg,var(--green),var(--teal)); transition:width 1s ease; }
+    .goal-meta-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:.75rem; }
+    .goal-meta-item label { color:var(--text-muted); font-weight:600; font-size:.68rem; text-transform:uppercase; letter-spacing:.04em; }
+    .goal-meta-item span  { font-weight:700; font-size:.82rem; display:block; margin-top:1px; }
+
+    /* ── TRANSACTIONS PAGE ──────────────────────────────── */
+    .txn-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+    .txn-table th { text-align:left; font-size:.68rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; padding:9px 10px; border-bottom:2px solid var(--border); }
+    .txn-table td { padding:11px 10px; border-bottom:1px solid var(--border-light); }
+    .txn-table tr:hover td { background:var(--bg-hover); }
+    .type-badge { padding:2px 9px; border-radius:5px; font-size:.68rem; font-weight:700; text-transform:uppercase; }
+    .type-sip      { background:#dcfce7; color:#15803d; }
+    .type-buy      { background:#dcfce7; color:#15803d; }
+    .type-sell     { background:#fee2e2; color:#dc2626; }
+    .type-dividend { background:#fef3c7; color:#b45309; }
+    .type-deposit  { background:#eff6ff; color:#1d4ed8; }
+
+    /* ── SETTINGS ───────────────────────────────────────── */
+    .settings-layout { display:grid; grid-template-columns:180px 1fr; gap:16px; }
+    @media(max-width:640px){ .settings-layout{grid-template-columns:1fr} }
+    .settings-nav { display:flex; flex-direction:column; gap:2px; }
+    .settings-nav-item { display:flex; align-items:center; gap:8px; padding:9px 11px; border-radius:9px; border:none; background:none; width:100%; text-align:left; font-size:.82rem; font-weight:500; color:var(--text-secondary); cursor:pointer; font-family:var(--font-body); transition:all .18s; }
+    .settings-nav-item.active { background:var(--green-bg); color:var(--green-dark); font-weight:700; }
+    .settings-nav-item:hover:not(.active) { background:var(--bg-hover); color:var(--text-primary); }
+    .settings-section { display:none; }
+    .settings-section.active { display:block; }
+    .settings-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px; }
+    .settings-card h3 { font-size:1rem; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+    .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border-light); }
+    .toggle-row:last-child { border-bottom:none; }
+    .toggle-info h4 { font-size:.85rem; font-weight:600; margin-bottom:2px; }
+    .toggle-info p  { font-size:.75rem; color:var(--text-muted); }
+    .toggle { width:42px; height:22px; border-radius:99px; background:var(--border); border:none; cursor:pointer; position:relative; transition:background .25s; flex-shrink:0; }
+    .toggle.on { background:var(--green); }
+    .toggle::after { content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#fff; transition:left .25s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+    .toggle.on::after { left:23px; }
+    .profile-avatar-big { width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,var(--green),var(--teal)); color:#fff; font-weight:800; font-size:1.3rem; font-family:var(--font-display); display:flex; align-items:center; justify-content:center; }
+
+    /* ── MODAL ──────────────────────────────────────────── */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(5px); z-index:1000; display:flex; align-items:center; justify-content:center; padding:16px; animation:fadeIn .2s; }
+    .modal { background:var(--bg-card); border-radius:var(--radius-xl); padding:26px; width:100%; max-width:460px; box-shadow:var(--shadow-lg); animation:fadeUp .3s; max-height:90vh; overflow-y:auto; }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .modal-header h3 { font-size:1.05rem; }
+    .modal-close { width:30px; height:30px; border-radius:8px; background:var(--bg-hover); border:none; font-size:1rem; color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .18s; }
+    .modal-close:hover { background:var(--border); }
+    .field-group { margin-bottom:14px; }
+    .field-label { font-size:.78rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:5px; }
+    .field-row   { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .field-input {
+      width:100%; font-family:var(--font-body); font-size:.875rem; padding:10px 12px;
+      background:var(--bg); border:1.5px solid var(--border); border-radius:var(--radius);
+      color:var(--text-primary); outline:none; transition:border .18s;
+    }
+    .field-input:focus { border-color:var(--green); box-shadow:0 0 0 3px rgba(34,197,94,.1); }
+
+    /* ── QUIZ HISTORY ───────────────────────────────────── */
+    .quiz-hist-card { background:var(--bg-hover); border-radius:var(--radius); padding:12px 14px; display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+    .quiz-hist-icon { font-size:1.4rem; }
+    .quiz-hist-title { font-size:.85rem; font-weight:700; }
+    .quiz-hist-meta  { font-size:.73rem; color:var(--text-muted); }
+    .quiz-hist-score { font-family:var(--font-display); font-weight:800; font-size:1.1rem; margin-left:auto; color:var(--green-dark); }
+  </style>
+</head>
+<body>
+<!-- ═══ NAVBAR ════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+      RupeeWise
+    </a>
+    <div class="nav-links">
+      <a href="index.html"  class="nav-link" data-page="index.html">Home</a>
+      <a href="stocks.html" class="nav-link" data-page="stocks.html">📈 Stocks</a>
+      <a href="learn.html"  class="nav-link" data-page="learn.html">🎓 Learn</a>
+      <a href="expense.html" class="nav-link" data-page="expense.html">💸 Expense</a>
+      <a href="trading.html" class="nav-link" data-page="trading.html">🎮 Trade</a>
+    </div>
+    <div class="nav-actions">
+      <button class="dark-toggle" onclick="toggleDarkMode()">🌙</button>
+      <div style="display:flex;align-items:center;gap:8px" id="nav-user-info">
+        <div style="font-size:.82rem;font-weight:600;color:var(--text-primary)" id="nav-user-name"></div>
+        <div class="nav-avatar" id="nav-avatar" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--teal));color:#fff;font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="showTab('settings')"></div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">Sign Out</button>
+      <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">☰</button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html" class="nav-link">🏠 Home</a>
+    <a href="stocks.html" class="nav-link">📈 Stocks</a>
+    <a href="learn.html" class="nav-link">🎓 Learn</a>
+    <button class="btn btn-outline" style="margin:8px 0;justify-content:center" onclick="doLogout()">Sign Out</button>
+  </div>
+</nav>
+
+<!-- ═══ DASHBOARD ROOT ════════════════════════════════════ -->
+<div class="dash-root">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="dash-sidebar">
+    <!-- User card -->
+    <div class="sidebar-user">
+      <div class="sidebar-user-card">
+        <div class="sidebar-avatar" id="sb-avatar">AK</div>
+        <div>
+          <div class="sidebar-user-name"  id="sb-name">Aakash Kumar</div>
+          <div class="sidebar-user-plan">Premium Plan</div>
+        </div>
+        <div class="online-dot"></div>
+      </div>
+    </div>
+
+    <!-- Nav items -->
+    <div style="padding:8px 6px;flex:1">
+      <div class="sidebar-section">Overview</div>
+      <button class="sidebar-item active" id="tab-btn-overview" onclick="showTab('overview')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="sidebar-item" id="tab-btn-portfolio" onclick="showTab('portfolio')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Portfolio
+      </button>
+      <div class="sidebar-section">Manage</div>
+      <button class="sidebar-item" id="tab-btn-sips" onclick="showTab('sips')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        SIP Manager
+      </button>
+      <button class="sidebar-item" id="tab-btn-goals" onclick="showTab('goals')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        Goals
+      </button>
+      <button class="sidebar-item" id="tab-btn-transactions" onclick="showTab('transactions')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Transactions
+        <span class="sidebar-badge" id="sb-txn-count">0</span>
+      </button>
+      <div class="sidebar-section">More</div>
+      <a href="stocks.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        Live Stocks
+      </a>
+      <a href="learn.html" class="sidebar-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        Finance Quiz
+      </a>
+    </div>
+
+    <!-- Bottom items -->
+    <div class="sidebar-bottom">
+      <button class="sidebar-item" id="tab-btn-settings" onclick="showTab('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </button>
+      <button class="sidebar-logout" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="dash-main" id="dash-main">
+
+    <!-- ════ OVERVIEW TAB ════ -->
+    <div class="tab-content active" id="tab-overview">
+      <div class="page-header">
+        <h1 id="dash-greeting">Hey Aakash 👋</h1>
+        <p>Here's your personalised investment overview</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Value <div class="stat-icon" style="background:#dcfce7">💼</div></div>
+          <div class="stat-value" id="stat-total-value">₹3,25,000</div>
+          <div class="stat-change up" id="stat-returns">↑ +12.5% overall</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Monthly SIP <div class="stat-icon" style="background:#eff6ff">🔄</div></div>
+          <div class="stat-value" id="stat-monthly-sip">₹5,000</div>
+          <div class="stat-change" style="color:var(--text-muted)" id="stat-sip-info">Auto: 1st of month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Invested <div class="stat-icon" style="background:#fef3c7">💰</div></div>
+          <div class="stat-value" id="stat-invested">₹2,90,000</div>
+          <div class="stat-change up" id="stat-gains">↑ ₹35,000 gains</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active SIPs <div class="stat-icon" style="background:#f3e8ff">📋</div></div>
+          <div class="stat-value" id="stat-active-sips">3</div>
+          <div class="stat-change up" id="stat-sip-total">All running</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div><h3>Portfolio Growth</h3><p>6-month performance</p></div>
+            <div class="period-tabs">
+              <button class="period-tab active" onclick="setPeriod(this,'1M')">1M</button>
+              <button class="period-tab" onclick="setPeriod(this,'3M')">3M</button>
+              <button class="period-tab" onclick="setPeriod(this,'6M')">6M</button>
+              <button class="period-tab" onclick="setPeriod(this,'1Y')">1Y</button>
+            </div>
+          </div>
+          <canvas id="growthChart" height="200"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><div><h3>Allocation</h3><p>Asset distribution</p></div></div>
+          <canvas id="allocChart" height="160"></canvas>
+          <div class="alloc-legend" id="alloc-legend"></div>
+        </div>
+      </div>
+
+      <!-- Bottom row -->
+      <div class="bottom-row">
+        <!-- Recent transactions -->
+        <div class="chart-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <h3 style="font-size:.92rem">Recent Transactions</h3>
+            <button onclick="showTab('transactions')" style="font-size:.78rem;color:var(--green-dark);font-weight:600;background:none;border:none;cursor:pointer">View all →</button>
+          </div>
+          <div class="txn-list" id="recent-txns"></div>
+        </div>
+        <!-- Goal progress -->
+        <div class="chart-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <h3 style="font-size:.92rem">🎯 Goal Progress</h3>
+            <button onclick="showTab('goals')" style="font-size:.78rem;color:var(--green-dark);font-weight:600;background:none;border:none;cursor:pointer">Manage →</button>
+          </div>
+          <div id="dash-goals"></div>
+        </div>
+      </div>
+
+      <!-- Fee Transparency -->
+      <div class="chart-card">
+        <h3 style="font-size:.92rem;margin-bottom:14px">💸 Fee Transparency</h3>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+          <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius);padding:14px;text-align:center">
+            <div style="font-size:.68rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Platform Fee</div>
+            <div style="font-size:1.5rem;font-weight:800;font-family:var(--font-display);color:var(--green-dark)">₹0</div>
+            <div style="font-size:.7rem;color:var(--text-muted);margin-top:3px">Free forever</div>
+          </div>
+          <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius);padding:14px;text-align:center">
+            <div style="font-size:.68rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Fund Expense</div>
+            <div style="font-size:1.5rem;font-weight:800;font-family:var(--font-display);color:var(--green-dark)">0.1%</div>
+            <div style="font-size:.7rem;color:var(--text-muted);margin-top:3px">Avg. direct TER</div>
+          </div>
+          <div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius);padding:14px;text-align:center">
+            <div style="font-size:.68rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Brokerage</div>
+            <div style="font-size:1.5rem;font-weight:800;font-family:var(--font-display);color:var(--green-dark)">₹0</div>
+            <div style="font-size:.7rem;color:var(--text-muted);margin-top:3px">Zero brokerage</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ PORTFOLIO TAB ════ -->
+    <div class="tab-content" id="tab-portfolio">
+      <div class="page-header"><h1>Portfolio</h1><p>All your investment holdings</p></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+        <div class="stat-card"><div class="stat-label">Portfolio Value</div><div class="stat-value" id="port-total-value">—</div><div class="stat-change up" id="port-gain">—</div></div>
+        <div class="stat-card"><div class="stat-label">Total Return</div><div class="stat-value" id="port-return" style="color:var(--green-dark)">—</div><div class="stat-change" style="color:var(--text-muted)">Since inception</div></div>
+        <div class="stat-card"><div class="stat-label">Total Invested</div><div class="stat-value" id="port-invested">—</div><div class="stat-change" style="color:var(--text-muted)">Across funds</div></div>
+      </div>
+      <div class="chart-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <h3 style="font-size:.92rem">Holdings</h3>
+          <button class="btn btn-primary btn-sm" onclick="showModal('buy-modal')">+ Buy</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="port-table">
+            <thead><tr><th>Asset</th><th>Units</th><th>Avg Cost</th><th>Current</th><th>P&L</th><th>Alloc.</th><th></th></tr></thead>
+            <tbody id="holdings-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ SIPS TAB ════ -->
+    <div class="tab-content" id="tab-sips">
+      <div class="page-header"><h1>SIP Manager</h1><p>Manage your Systematic Investment Plans</p></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+        <div class="stat-card"><div class="stat-label">Active SIPs</div><div class="stat-value" id="sip-active-count">—</div></div>
+        <div class="stat-card"><div class="stat-label">Monthly Total</div><div class="stat-value" id="sip-monthly-total">—</div></div>
+        <div class="stat-card"><div class="stat-label">Total via SIP</div><div class="stat-value" id="sip-total-invested">—</div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <h3 style="font-size:.92rem">Your SIPs</h3>
+          <button class="btn btn-primary btn-sm" onclick="showModal('sip-modal')">+ New SIP</button>
+        </div>
+        <div id="sip-list"></div>
+      </div>
+      <!-- Upcoming debits -->
+      <div class="chart-card">
+        <h3 style="font-size:.92rem;margin-bottom:14px">📅 Upcoming Debits (April 2026)</h3>
+        <div id="sip-calendar"></div>
+      </div>
+    </div>
+
+    <!-- ════ GOALS TAB ════ -->
+    <div class="tab-content" id="tab-goals">
+      <div class="page-header"><h1>Goals</h1><p>Track your financial milestones</p></div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+        <button class="btn btn-primary btn-sm" onclick="showModal('goal-modal')">+ New Goal</button>
+      </div>
+      <div class="goals-grid" id="goals-grid"></div>
+    </div>
+
+    <!-- ════ TRANSACTIONS TAB ════ -->
+    <div class="tab-content" id="tab-transactions">
+      <div class="page-header"><h1>Transactions</h1><p>Your complete investment history</p></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px">
+        <div class="stat-card"><div class="stat-label">Total Invested</div><div class="stat-value" id="txn-invested">—</div></div>
+        <div class="stat-card"><div class="stat-label">Transactions</div><div class="stat-value" id="txn-count">—</div></div>
+        <div class="stat-card"><div class="stat-label">Returns</div><div class="stat-value" id="txn-returns" style="color:var(--green-dark)">—</div></div>
+        <div class="stat-card"><div class="stat-label">Avg Trade</div><div class="stat-value" id="txn-avg">—</div></div>
+      </div>
+      <div class="chart-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="txn-filters">
+            <button class="btn btn-sm" style="border-radius:999px;border:1.5px solid var(--green);background:var(--green-bg);color:var(--green-dark)" onclick="filterTxn('all',this)">All</button>
+            <button class="btn btn-outline btn-sm" onclick="filterTxn('sip',this)">SIP</button>
+            <button class="btn btn-outline btn-sm" onclick="filterTxn('buy',this)">Buy</button>
+            <button class="btn btn-outline btn-sm" onclick="filterTxn('sell',this)">Sell</button>
+            <button class="btn btn-outline btn-sm" onclick="filterTxn('dividend',this)">Dividend</button>
+          </div>
+          <button class="btn btn-outline btn-sm">⬇ Export</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="txn-table">
+            <thead><tr><th>Date</th><th>Asset</th><th>Type</th><th>Units</th><th>Amount</th><th>Status</th></tr></thead>
+            <tbody id="txn-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════ SETTINGS TAB ════ -->
+    <div class="tab-content" id="tab-settings">
+      <div class="page-header"><h1>Settings</h1><p>Manage your account preferences</p></div>
+      <div class="settings-layout">
+        <nav class="settings-nav">
+          <button class="settings-nav-item active" onclick="showSettings('profile',this)">👤 Profile</button>
+          <button class="settings-nav-item" onclick="showSettings('plan',this)">💳 Plan</button>
+          <button class="settings-nav-item" onclick="showSettings('notifications',this)">🔔 Notifications</button>
+          <button class="settings-nav-item" onclick="showSettings('security',this)">🛡️ Security</button>
+          <button class="settings-nav-item" onclick="showSettings('quiz',this)">🎓 Quiz History</button>
+        </nav>
+        <div>
+          <!-- Profile -->
+          <div class="settings-section active settings-card" id="s-profile">
+            <h3>Profile Information</h3>
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+              <div class="profile-avatar-big" id="settings-avatar">AK</div>
+              <div>
+                <div style="font-weight:700;font-size:1rem" id="settings-name-display">Aakash Kumar</div>
+                <div style="font-size:.82rem;color:var(--text-muted)" id="settings-email-display">aakash@demo.com</div>
+                <div style="font-size:.75rem;color:var(--green-dark);font-weight:600;margin-top:2px" id="settings-joined">Joined Jan 2024</div>
+              </div>
+            </div>
+            <div class="field-row" style="margin-bottom:0">
+              <div class="field-group"><label class="field-label">Full Name</label><input class="field-input" id="s-name" type="text"/></div>
+              <div class="field-group"><label class="field-label">Email</label><input class="field-input" id="s-email" type="email"/></div>
+              <div class="field-group"><label class="field-label">Phone</label><input class="field-input" id="s-phone" type="tel"/></div>
+              <div class="field-group">
+                <label class="field-label">Risk Profile</label>
+                <select class="field-input" id="s-risk">
+                  <option value="conservative">Conservative</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="aggressive">Aggressive</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm" style="margin-top:16px" onclick="saveProfile()">Save Changes</button>
+          </div>
+          <!-- Plan -->
+          <div class="settings-section settings-card" id="s-plan">
+            <h3>Subscription Plan</h3>
+            <div style="border:2px solid var(--green);border-radius:16px;padding:18px;background:var(--green-bg);margin-bottom:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><span style="font-weight:700;font-size:1rem">Premium</span><span class="badge badge-green">Active</span></div>
+              <div style="font-size:1.4rem;font-weight:800;font-family:var(--font-display);color:var(--green-dark);margin-bottom:10px">₹999/mo</div>
+              <div style="font-size:.8rem;color:var(--text-secondary);display:flex;flex-direction:column;gap:5px">
+                <div>✓ Unlimited assets & funds</div>
+                <div>✓ Advanced analytics</div>
+                <div>✓ Priority support</div>
+                <div>✓ API access</div>
+              </div>
+            </div>
+            <div style="border:1.5px solid var(--border);border-radius:14px;padding:16px">
+              <div style="font-weight:700;margin-bottom:4px">Enterprise</div>
+              <div style="font-size:1.2rem;font-weight:800;font-family:var(--font-display);color:var(--text-secondary);margin-bottom:8px">₹4,999/mo</div>
+              <button class="btn btn-primary btn-sm">Upgrade</button>
+            </div>
+          </div>
+          <!-- Notifications -->
+          <div class="settings-section settings-card" id="s-notifications">
+            <h3>Notification Preferences</h3>
+            <div id="notif-toggles"></div>
+          </div>
+          <!-- Security -->
+          <div class="settings-section settings-card" id="s-security">
+            <h3>Security Settings</h3>
+            <div id="security-toggles"></div>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+              <button class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border-radius:999px">Change Password</button>
+            </div>
+          </div>
+          <!-- Quiz History -->
+          <div class="settings-section settings-card" id="s-quiz">
+            <h3>🎓 Quiz History</h3>
+            <div id="quiz-history-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Mobile bottom nav -->
+<nav class="mobile-bottom-nav">
+  <button class="mob-nav-item active" id="mob-overview" onclick="showTab('overview')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Home
+  </button>
+  <button class="mob-nav-item" id="mob-portfolio" onclick="showTab('portfolio')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Portfolio
+  </button>
+  <button class="mob-nav-item" id="mob-sips" onclick="showTab('sips')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    SIPs
+  </button>
+  <button class="mob-nav-item" id="mob-goals" onclick="showTab('goals')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+    Goals
+  </button>
+  <button class="mob-nav-item" id="mob-settings" onclick="showTab('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    More
+  </button>
+</nav>
+
+<!-- ═══ MODALS ════════════════════════════════════════════ -->
+<!-- Buy Modal -->
+<div class="modal-overlay hide" id="buy-modal" onclick="if(event.target===this)hideModalEl('buy-modal')">
+  <div class="modal">
+    <div class="modal-header"><h3>💰 Buy Fund</h3><button class="modal-close" onclick="hideModalEl('buy-modal')">✕</button></div>
+    <div class="field-group"><label class="field-label">Fund Name</label><input type="text" class="field-input" id="buy-fund" placeholder="e.g. Axis Bluechip Fund"/></div>
+    <div class="field-group"><label class="field-label">Asset Class</label><select class="field-input" id="buy-class"><option>Equity</option><option>Debt</option><option>Gold</option></select></div>
+    <div class="field-row">
+      <div class="field-group"><label class="field-label">Amount (₹)</label><input type="number" class="field-input" id="buy-amount" placeholder="5000"/></div>
+      <div class="field-group"><label class="field-label">NAV (₹)</label><input type="number" class="field-input" id="buy-nav" placeholder="102.45"/></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-outline" onclick="hideModalEl('buy-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doBuy()">Buy Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- SIP Modal -->
+<div class="modal-overlay hide" id="sip-modal" onclick="if(event.target===this)hideModalEl('sip-modal')">
+  <div class="modal">
+    <div class="modal-header"><h3>🔄 Create New SIP</h3><button class="modal-close" onclick="hideModalEl('sip-modal')">✕</button></div>
+    <div class="field-group"><label class="field-label">Fund Name</label><input type="text" class="field-input" id="sip-fund" placeholder="e.g. Mirae Asset Large Cap"/></div>
+    <div class="field-group"><label class="field-label">Asset Class</label><select class="field-input" id="sip-class"><option>Equity</option><option>Debt</option><option>Gold</option></select></div>
+    <div class="field-row">
+      <div class="field-group"><label class="field-label">Amount (₹)</label><input type="number" class="field-input" id="sip-amount" placeholder="2000" min="500"/></div>
+      <div class="field-group"><label class="field-label">SIP Date</label><input type="number" class="field-input" id="sip-date" placeholder="1-28" min="1" max="28" value="1"/></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-outline" onclick="hideModalEl('sip-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doCreateSIP()">Start SIP</button>
+    </div>
+  </div>
+</div>
+
+<!-- Goal Modal -->
+<div class="modal-overlay hide" id="goal-modal" onclick="if(event.target===this)hideModalEl('goal-modal')">
+  <div class="modal">
+    <div class="modal-header"><h3>🎯 Create New Goal</h3><button class="modal-close" onclick="hideModalEl('goal-modal')">✕</button></div>
+    <div class="field-group"><label class="field-label">Goal Name</label><input type="text" class="field-input" id="goal-name" placeholder="e.g. Down Payment Fund"/></div>
+    <div class="field-row">
+      <div class="field-group"><label class="field-label">Target Amount (₹)</label><input type="number" class="field-input" id="goal-target" placeholder="500000"/></div>
+      <div class="field-group"><label class="field-label">Current Amount (₹)</label><input type="number" class="field-input" id="goal-current" placeholder="0" value="0"/></div>
+    </div>
+    <div class="field-row">
+      <div class="field-group"><label class="field-label">Target Date</label><input type="date" class="field-input" id="goal-date"/></div>
+      <div class="field-group"><label class="field-label">Icon (emoji)</label><input type="text" class="field-input" id="goal-icon" placeholder="🏠" maxlength="4"/></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-outline" onclick="hideModalEl('goal-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="doCreateGoal()">Create Goal</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="script.js"></script>
+<script src="api.js"></script>
+<script src="auth.js"></script>
+<script>
+'use strict';
+
+/* ════ STATE ══════════════════════════════════════════════ */
+let currentUser = null;
+let userData    = null;
+let activeTab   = 'overview';
+let growthChart = null;
+let allocChart  = null;
+let txnFilter   = 'all';
+
+/* ════ INIT ═══════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', async () => {
+  // Auth guard
+  if (!Auth.isLoggedIn()) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  const session = Auth.getSession();
+  currentUser   = session.user;
+  userData      = Auth.getUserData(currentUser.id);
+
+  // Render user info across UI
+  renderUserInfo();
+
+  // Render all tabs
+  renderOverview();
+  renderPortfolio();
+  renderSIPs();
+  renderGoals();
+  renderTransactions();
+  renderSettings();
+
+  // Init stocks API for live ticker
+  try { await StockAPI.init(); } catch(e) {}
+});
+
+/* ════ USER INFO ══════════════════════════════════════════ */
+function getInitials(name) {
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function renderUserInfo() {
+  const initials = getInitials(currentUser.name);
+  const firstName = currentUser.name.split(' ')[0];
+
+  // Sidebar
+  document.getElementById('sb-avatar').textContent = initials;
+  document.getElementById('sb-name').textContent   = currentUser.name;
+
+  // Greeting
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('dash-greeting').textContent = `${greet}, ${firstName} 👋`;
+
+  // Navbar
+  document.getElementById('nav-user-name').textContent  = firstName;
+  document.getElementById('nav-avatar').textContent      = initials;
+
+  // Txn badge
+  document.getElementById('sb-txn-count').textContent = userData.transactions.length;
+}
+
+/* ════ TAB NAVIGATION ═════════════════════════════════════ */
+function showTab(tab) {
+  // Hide all tab content
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  // Deactivate all sidebar items
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  // Deactivate mobile nav
+  document.querySelectorAll('.mob-nav-item').forEach(el => el.classList.remove('active'));
+
+  document.getElementById('tab-' + tab)?.classList.add('active');
+  document.getElementById('tab-btn-' + tab)?.classList.add('active');
+  document.getElementById('mob-' + tab)?.classList.add('active');
+
+  activeTab = tab;
+  closeMobileMenu();
+
+  // Lazy render charts
+  if (tab === 'overview') renderCharts();
+  if (tab === 'settings') renderSettings();
+}
+
+/* ════ OVERVIEW ═══════════════════════════════════════════ */
+function renderOverview() {
+  const p = userData.portfolio;
+  document.getElementById('stat-total-value').textContent = formatINR(p.totalValue);
+  document.getElementById('stat-returns').textContent     = `↑ +${p.returnsPct}% overall`;
+  document.getElementById('stat-monthly-sip').textContent = formatINR(p.monthlySIP, 0);
+  document.getElementById('stat-invested').textContent    = formatINR(p.totalInvested);
+  document.getElementById('stat-gains').textContent       = `↑ ${formatINR(p.totalGains)} gains`;
+  document.getElementById('stat-active-sips').textContent = userData.sips.filter(s=>s.status==='active').length;
+
+  // Recent transactions
+  const txnEl = document.getElementById('recent-txns');
+  const typeIcons = { sip:'🔵', buy:'🟢', sell:'🔴', dividend:'🟡', deposit:'💜' };
+  txnEl.innerHTML = userData.transactions.slice(0, 5).map(t => {
+    const isPos = ['sip','buy','deposit','dividend'].includes(t.type);
+    return `<div class="txn-item">
+      <div class="txn-icon" style="background:${isPos?'var(--green-bg)':'#fef2f2'}">${typeIcons[t.type]||'📊'}</div>
+      <div><div class="txn-name">${t.fund}</div><div class="txn-meta">${t.type.toUpperCase()} · ${t.date}</div></div>
+      <div class="txn-amount" style="color:${isPos?'var(--green-dark)':'var(--red)'}">${isPos?'+':'-'}${formatINR(t.amount)}</div>
+    </div>`;
+  }).join('');
+
+  // Goals preview
+  const goalsEl = document.getElementById('dash-goals');
+  goalsEl.innerHTML = userData.goals.slice(0, 3).map(g => {
+    const pct = Math.min(100, Math.round(g.currentAmt / g.targetAmt * 100));
+    return `<div class="goal-bar-wrap">
+      <div class="goal-bar-header">
+        <div class="goal-bar-label">${g.icon} ${g.name}</div>
+        <div class="goal-bar-pct">${pct}%</div>
+      </div>
+      <div class="goal-bar-track"><div class="goal-bar-fill" style="width:${pct}%"></div></div>
+      <div class="goal-bar-amounts"><span>${formatINR(g.currentAmt,0)}</span><span>${formatINR(g.targetAmt,0)}</span></div>
+    </div>`;
+  }).join('');
+
+  renderCharts();
+}
+
+function renderCharts() {
+  // Growth Chart
+  const growthCtx = document.getElementById('growthChart');
+  if (growthCtx && !growthChart) {
+    const base = userData.portfolio.totalValue;
+    const data = [0.78,0.80,0.84,0.87,0.90,0.94,0.97,1.0].map(m => Math.round(base * m));
+    const labels = ['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+    growthChart = new Chart(growthCtx, {
+      type: 'line',
+      data: { labels, datasets: [{ data, borderColor:'#22c55e', borderWidth:2.5, fill:true, tension:0.4, pointRadius:0, pointHoverRadius:5,
+        backgroundColor: (ctx => {
+          const g = ctx.chart.ctx.createLinearGradient(0,0,0,200);
+          g.addColorStop(0,'rgba(34,197,94,0.2)'); g.addColorStop(1,'rgba(34,197,94,0)'); return g;
+        })(growthCtx) }] },
+      options: { responsive:true, maintainAspectRatio:true, plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'₹'+v.raw.toLocaleString('en-IN')}}},
+        scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{ticks:{callback:v=>'₹'+(v/100000).toFixed(1)+'L',font:{size:10}},position:'right'}} }
+    });
+  }
+
+  // Allocation donut
+  const allocCtx = document.getElementById('allocChart');
+  if (allocCtx && !allocChart) {
+    const alloc = [{name:'Equity',pct:45,color:'#22c55e'},{name:'Debt',pct:30,color:'#60a5fa'},{name:'Gold',pct:15,color:'#f59e0b'},{name:'Cash',pct:10,color:'#cbd5e1'}];
+    allocChart = new Chart(allocCtx, {
+      type:'doughnut', data:{labels:alloc.map(a=>a.name),datasets:[{data:alloc.map(a=>a.pct),backgroundColor:alloc.map(a=>a.color),borderWidth:0,hoverOffset:4}]},
+      options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},cutout:'62%'}
+    });
+    document.getElementById('alloc-legend').innerHTML = alloc.map(a =>
+      `<div class="alloc-item"><div class="alloc-dot" style="background:${a.color}"></div><span class="alloc-name">${a.name}</span><span class="alloc-pct">${a.pct}%</span></div>`
+    ).join('');
+  }
+}
+
+function setPeriod(btn, period) {
+  document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  if (growthChart) {
+    const base = userData.portfolio.totalValue;
+    const datasets = {
+      '1M':[.90,.91,.92,.94,.96,.97,.98,1.0].map(m=>Math.round(base*m)),
+      '3M':[.82,.84,.86,.88,.91,.94,.97,1.0].map(m=>Math.round(base*m)),
+      '6M':[.74,.78,.82,.86,.90,.94,.97,1.0].map(m=>Math.round(base*m)),
+      '1Y':[.60,.65,.70,.75,.80,.86,.92,1.0].map(m=>Math.round(base*m)),
+    };
+    growthChart.data.datasets[0].data = datasets[period] || datasets['6M'];
+    growthChart.update();
+  }
+}
+
+/* ════ PORTFOLIO ══════════════════════════════════════════ */
+function renderPortfolio() {
+  const p = userData.portfolio;
+  document.getElementById('port-total-value').textContent = formatINR(p.totalValue);
+  document.getElementById('port-gain').textContent        = `↑ +${formatINR(p.totalGains)} gains`;
+  document.getElementById('port-return').textContent      = `+${p.returnsPct}%`;
+  document.getElementById('port-invested').textContent    = formatINR(p.totalInvested);
+
+  const body = document.getElementById('holdings-body');
+  body.innerHTML = userData.holdings.map(h => {
+    const pos = h.pnlPct >= 0;
+    const pnl = ((h.currPrice - h.avgPrice) * h.units).toFixed(0);
+    return `<tr>
+      <td><div style="display:flex;align-items:center;gap:9px"><div class="port-logo">${h.symbol.slice(0,3)}</div><div><div class="port-name">${h.name}</div><div class="port-sector">${h.sector}</div></div></div></td>
+      <td>${h.units}</td>
+      <td>${formatINR(h.avgPrice)}</td>
+      <td style="font-weight:700">${formatINR(h.currPrice)}</td>
+      <td><div style="color:${pos?'var(--green-dark)':'var(--red)'};font-weight:700;font-size:.8rem">${pos?'↑':'↓'} ${pos?'+':''}${h.pnlPct}%<br><span style="font-size:.7rem;opacity:.7">${pos?'+':'-'}${formatINR(Math.abs(pnl),0)}</span></div></td>
+      <td><div style="display:flex;align-items:center;gap:6px"><div class="bar-mini"><div class="bar-mini-fill" style="width:${h.alloc}%"></div></div><span style="font-size:.72rem;color:var(--text-muted)">${h.alloc}%</span></div></td>
+      <td><button class="btn btn-outline btn-sm" onclick="toast('Sell feature — connect backend!','info')">Sell</button></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ════ SIPs ═══════════════════════════════════════════════ */
+function renderSIPs() {
+  const active = userData.sips.filter(s => s.status === 'active');
+  const monthly = userData.sips.filter(s=>s.status==='active').reduce((a,s)=>a+s.amount,0);
+  const totalInv = userData.sips.reduce((a,s)=>a+s.totalInvested,0);
+
+  document.getElementById('sip-active-count').textContent    = active.length;
+  document.getElementById('sip-monthly-total').textContent   = formatINR(monthly,0);
+  document.getElementById('sip-total-invested').textContent  = formatINR(totalInv,0);
+
+  const list = document.getElementById('sip-list');
+  if (!userData.sips.length) {
+    list.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-muted)"><div style="font-size:2rem;margin-bottom:8px">🔄</div><div>No SIPs yet. Create your first one!</div></div>`;
+    return;
+  }
+  list.innerHTML = userData.sips.map(s => `
+    <div class="sip-card">
+      <div class="sip-icon">${s.emoji}</div>
+      <div style="flex:1">
+        <div class="sip-fund">${s.fund}</div>
+        <div class="sip-meta">${s.assetClass} · ${s.sipDate}${s.sipDate===1?'st':s.sipDate===2?'nd':s.sipDate===3?'rd':'th'} of every month</div>
+        <div style="font-size:.7rem;color:var(--text-muted);margin-top:2px">${s.installments} installments · ${formatINR(s.totalInvested,0)} invested</div>
+      </div>
+      <div>
+        <div class="sip-amount">${formatINR(s.amount,0)}/mo</div>
+        <div style="display:flex;justify-content:flex-end;margin-top:3px">
+          <span class="badge ${s.status==='active'?'badge-green':'badge-amber'}">${s.status}</span>
+        </div>
+        <div class="sip-actions">
+          <button class="btn btn-outline btn-sm" onclick="toggleSIP('${s.id}')">${s.status==='active'?'Pause':'Resume'}</button>
+          <button class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border-radius:999px" onclick="cancelSIP('${s.id}')">Cancel</button>
+        </div>
+      </div>
+    </div>`).join('');
+
+  // Calendar
+  const cal = document.getElementById('sip-calendar');
+  const activeSIPs = userData.sips.filter(s => s.status === 'active');
+  cal.innerHTML = activeSIPs.length
+    ? activeSIPs.sort((a,b)=>a.sipDate-b.sipDate).map(s => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:11px;border-radius:10px;background:var(--bg-hover);margin-bottom:7px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:34px;height:34px;border-radius:8px;background:var(--green-bg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--green-dark)">${String(s.sipDate).padStart(2,'0')}</div>
+            <div><div style="font-weight:600;font-size:.85rem">${s.fund}</div><div style="font-size:.7rem;color:var(--text-muted)">Apr ${s.sipDate}, 2026</div></div>
+          </div>
+          <div style="font-weight:800;font-family:var(--font-display)">${formatINR(s.amount,0)}</div>
+        </div>`).join('')
+    : '<div style="text-align:center;padding:20px;color:var(--text-muted)">No active SIPs</div>';
+}
+
+function toggleSIP(id) {
+  const sip = userData.sips.find(s => s.id === id);
+  if (!sip) return;
+  sip.status = sip.status === 'active' ? 'paused' : 'active';
+  Auth.saveUserData(currentUser.id, userData);
+  toast(`SIP ${sip.status === 'active' ? 'resumed' : 'paused'}`, 'success');
+  renderSIPs();
+  renderPortfolio();
+}
+
+function cancelSIP(id) {
+  userData.sips = userData.sips.filter(s => s.id !== id);
+  Auth.saveUserData(currentUser.id, userData);
+  toast('SIP cancelled', 'info');
+  renderSIPs();
+}
+
+/* ════ GOALS ══════════════════════════════════════════════ */
+function renderGoals() {
+  const grid = document.getElementById('goals-grid');
+  if (!userData.goals.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted)"><div style="font-size:2rem;margin-bottom:8px">🎯</div><div>No goals yet. Create your first!</div></div>`;
+    return;
+  }
+  const statusBadge = { on_track:'badge-green', at_risk:'badge-amber', completed:'badge-blue' };
+  const statusLabel = { on_track:'On Track', at_risk:'At Risk', completed:'Done! 🎉' };
+  grid.innerHTML = userData.goals.map(g => {
+    const pct = Math.min(100, Math.round(g.currentAmt / g.targetAmt * 100));
+    return `<div class="goal-card">
+      <div class="goal-card-top">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font-size:1.5rem">${g.icon}</div>
+          <div>
+            <div style="font-weight:700;font-size:.9rem">${g.name}</div>
+            <span class="badge ${statusBadge[g.status]||'badge-green'}">${statusLabel[g.status]||g.status}</span>
+          </div>
+        </div>
+        <div class="goal-pct-big">${pct}%</div>
+      </div>
+      <div class="goal-progress-track"><div class="goal-progress-fill" style="width:${pct}%"></div></div>
+      <div class="goal-meta-grid">
+        <div class="goal-meta-item"><label>Current</label><span>${formatINR(g.currentAmt,0)}</span></div>
+        <div class="goal-meta-item"><label>Target</label><span>${formatINR(g.targetAmt,0)}</span></div>
+        <div class="goal-meta-item"><label>Remaining</label><span>${formatINR(g.targetAmt - g.currentAmt,0)}</span></div>
+        <div class="goal-meta-item"><label>Target Date</label><span>${g.targetDate||'—'}</span></div>
+      </div>
+      <div style="display:flex;gap:7px;margin-top:12px">
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="updateGoal('${g.id}')">Update</button>
+        <button class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border-radius:999px" onclick="deleteGoal('${g.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateGoal(id) {
+  const goal = userData.goals.find(g => g.id === id);
+  if (!goal) return;
+  const val = prompt(`Update current amount for "${goal.name}" (₹):`, goal.currentAmt);
+  if (val !== null && !isNaN(val)) {
+    goal.currentAmt = Math.min(parseFloat(val), goal.targetAmt);
+    goal.status = goal.currentAmt >= goal.targetAmt ? 'completed' : 'on_track';
+    Auth.saveUserData(currentUser.id, userData);
+    toast('Goal updated!', 'success');
+    renderGoals();
+    renderOverview();
+  }
+}
+
+function deleteGoal(id) {
+  userData.goals = userData.goals.filter(g => g.id !== id);
+  Auth.saveUserData(currentUser.id, userData);
+  toast('Goal deleted', 'info');
+  renderGoals();
+  renderOverview();
+}
+
+/* ════ TRANSACTIONS ═══════════════════════════════════════ */
+function renderTransactions() {
+  const p = userData.portfolio;
+  document.getElementById('txn-invested').textContent = formatINR(p.totalInvested);
+  document.getElementById('txn-count').textContent    = userData.transactions.length;
+  document.getElementById('txn-returns').textContent  = `+${p.returnsPct}%`;
+  document.getElementById('txn-avg').textContent      = formatINR(p.totalInvested / Math.max(1,userData.transactions.length));
+
+  const filtered = txnFilter === 'all' ? userData.transactions : userData.transactions.filter(t => t.type === txnFilter);
+  const typeClass = { sip:'type-sip', buy:'type-buy', sell:'type-sell', dividend:'type-dividend', deposit:'type-deposit' };
+  const isPos = t => ['sip','buy','deposit','dividend'].includes(t.type);
+
+  document.getElementById('txn-body').innerHTML = filtered.map(t => `
+    <tr>
+      <td style="color:var(--text-muted);font-size:.78rem">${t.date}</td>
+      <td style="font-weight:600">${t.fund}</td>
+      <td><span class="type-badge ${typeClass[t.type]||''}">${t.type.toUpperCase()}</span></td>
+      <td style="color:var(--text-secondary);font-size:.78rem">${t.units}</td>
+      <td style="font-weight:700;color:${isPos(t)?'var(--green-dark)':'var(--red)'}">${isPos(t)?'+':'-'}${formatINR(t.amount)}</td>
+      <td><div style="display:flex;align-items:center;gap:5px"><div style="width:6px;height:6px;border-radius:50%;background:var(--green)"></div><span style="font-size:.75rem;color:var(--text-muted)">${t.status}</span></div></td>
+    </tr>`).join('');
+}
+
+function filterTxn(type, btn) {
+  txnFilter = type;
+  document.querySelectorAll('#txn-filters .btn').forEach(b => {
+    b.style.borderColor = 'var(--border)'; b.style.background = 'transparent'; b.style.color = 'var(--text-secondary)';
+  });
+  btn.style.borderColor = 'var(--green)'; btn.style.background = 'var(--green-bg)'; btn.style.color = 'var(--green-dark)';
+  renderTransactions();
+}
+
+/* ════ SETTINGS ═══════════════════════════════════════════ */
+function renderSettings() {
+  const u = currentUser;
+  document.getElementById('settings-avatar').textContent = getInitials(u.name);
+  document.getElementById('settings-name-display').textContent = u.name;
+  document.getElementById('settings-email-display').textContent = u.email;
+  document.getElementById('settings-joined').textContent = `Joined ${u.joinDate || '—'}`;
+  document.getElementById('s-name').value  = u.name;
+  document.getElementById('s-email').value = u.email;
+  document.getElementById('s-phone').value = u.phone || '';
+  document.getElementById('s-risk').value  = u.riskProfile || 'moderate';
+
+  // Notification toggles
+  const notifs = userData.settings.notifications;
+  document.getElementById('notif-toggles').innerHTML = [
+    {key:'priceAlerts',  label:'Price Alerts',      desc:'When assets hit your target price'},
+    {key:'tradeConfirm', label:'Trade Confirmations',desc:'Confirmations for all executed trades'},
+    {key:'sipReminder',  label:'SIP Reminders',      desc:'2 days before each SIP debit'},
+    {key:'newsletter',   label:'Market Newsletter',  desc:'Weekly market analysis & insights'},
+  ].map(n => `
+    <div class="toggle-row">
+      <div class="toggle-info"><h4>${n.label}</h4><p>${n.desc}</p></div>
+      <button class="toggle ${notifs[n.key]?'on':''}" onclick="toggleSetting('notifications','${n.key}',this)"></button>
+    </div>`).join('');
+
+  const security = userData.settings.security;
+  document.getElementById('security-toggles').innerHTML = [
+    {key:'twoFactor',    label:'Two-Factor Authentication',  desc:'Extra layer of security via OTP'},
+    {key:'biometric',    label:'Biometric Login',            desc:'Fingerprint or face recognition'},
+    {key:'autoTimeout',  label:'Auto Session Timeout',       desc:'Sign out after 30 min inactivity'},
+  ].map(s => `
+    <div class="toggle-row">
+      <div class="toggle-info"><h4>${s.label}</h4><p>${s.desc}</p></div>
+      <button class="toggle ${security[s.key]?'on':''}" onclick="toggleSetting('security','${s.key}',this)"></button>
+    </div>`).join('');
+
+  // Quiz history
+  const qh = document.getElementById('quiz-history-list');
+  const history = userData.quizHistory || [];
+  if (!history.length) {
+    qh.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-muted)"><div style="font-size:2rem;margin-bottom:8px">🎓</div><div>No quiz attempts yet. <a href="learn.html" style="color:var(--green-dark);font-weight:700">Start a quiz!</a></div></div>`;
+  } else {
+    qh.innerHTML = history.map(h => {
+      const trophy = h.accuracy>=90?'🏆':h.accuracy>=70?'🥇':h.accuracy>=50?'🥈':'📚';
+      return `<div class="quiz-hist-card">
+        <div class="quiz-hist-icon">${trophy}</div>
+        <div>
+          <div class="quiz-hist-title">${h.category === 'all' ? 'Random Mix' : h.category}</div>
+          <div class="quiz-hist-meta">${h.correct}/${h.total} correct · ${h.accuracy}% · ${new Date(h.date).toLocaleDateString('en-IN')}</div>
+        </div>
+        <div class="quiz-hist-score">${h.score}pts</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+function showSettings(section, btn) {
+  document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.settings-nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('s-' + section)?.classList.add('active');
+  btn.classList.add('active');
+}
+
+function toggleSetting(group, key, btn) {
+  btn.classList.toggle('on');
+  userData.settings[group][key] = btn.classList.contains('on');
+  Auth.saveUserData(currentUser.id, userData);
+}
+
+function saveProfile() {
+  const updates = {
+    name:        document.getElementById('s-name').value.trim(),
+    email:       document.getElementById('s-email').value.trim(),
+    phone:       document.getElementById('s-phone').value.trim(),
+    riskProfile: document.getElementById('s-risk').value,
+  };
+  if (!updates.name) { toast('Name cannot be empty','error'); return; }
+  Auth.updateProfile(currentUser.id, updates);
+  Object.assign(currentUser, updates);
+  renderUserInfo();
+  renderSettings();
+  toast('Profile saved successfully!','success');
+}
+
+/* ════ MODALS ═════════════════════════════════════════════ */
+function showModal(id) { document.getElementById(id)?.classList.remove('hide'); document.body.style.overflow='hidden'; }
+function hideModalEl(id) { document.getElementById(id)?.classList.add('hide'); document.body.style.overflow=''; }
+
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') { document.querySelectorAll('.modal-overlay:not(.hide)').forEach(m=>{m.classList.add('hide'); document.body.style.overflow=''; }); }
+});
+
+/* ── Buy ── */
+function doBuy() {
+  const fund   = document.getElementById('buy-fund').value.trim();
+  const cls    = document.getElementById('buy-class').value;
+  const amount = parseFloat(document.getElementById('buy-amount').value)||0;
+  const nav    = parseFloat(document.getElementById('buy-nav').value)||100;
+  if (!fund || amount <= 0) { toast('Please fill all fields','error'); return; }
+
+  const units = (amount / nav).toFixed(2);
+  const sym   = fund.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,5);
+  userData.holdings.push({ id:'h'+Date.now(), symbol:sym, name:fund, sector:cls, units:parseFloat(units), avgPrice:nav, currPrice:nav, invested:amount, value:amount, pnlPct:0, alloc:5 });
+  userData.transactions.unshift({ id:'t'+Date.now(), date:'Today', fund, type:'buy', units:`${units} units`, amount, status:'completed' });
+  userData.portfolio.totalInvested += amount;
+  Auth.saveUserData(currentUser.id, userData);
+
+  hideModalEl('buy-modal');
+  document.getElementById('buy-fund').value=''; document.getElementById('buy-amount').value=''; document.getElementById('buy-nav').value='';
+  toast(`Bought ₹${amount.toLocaleString('en-IN')} of ${fund}!`, 'success');
+  renderPortfolio(); renderTransactions(); renderOverview();
+}
+
+/* ── SIP ── */
+function doCreateSIP() {
+  const fund   = document.getElementById('sip-fund').value.trim();
+  const cls    = document.getElementById('sip-class').value;
+  const amount = parseFloat(document.getElementById('sip-amount').value)||0;
+  const date   = parseInt(document.getElementById('sip-date').value)||1;
+  if (!fund || amount < 500) { toast('Minimum SIP amount is ₹500','error'); return; }
+
+  const emojis = {Equity:'📈',Debt:'💧',Gold:'🥇'};
+  userData.sips.push({ id:'s'+Date.now(), fund, assetClass:cls, amount, sipDate:date, status:'active', installments:0, totalInvested:0, emoji:emojis[cls]||'📊' });
+  Auth.saveUserData(currentUser.id, userData);
+
+  hideModalEl('sip-modal');
+  document.getElementById('sip-fund').value=''; document.getElementById('sip-amount').value='';
+  toast(`SIP of ₹${amount}/month started for ${fund}!`, 'success');
+  renderSIPs();
+}
+
+/* ── Goal ── */
+function doCreateGoal() {
+  const name    = document.getElementById('goal-name').value.trim();
+  const target  = parseFloat(document.getElementById('goal-target').value)||0;
+  const current = parseFloat(document.getElementById('goal-current').value)||0;
+  const date    = document.getElementById('goal-date').value;
+  const icon    = document.getElementById('goal-icon').value||'🎯';
+  if (!name || target <= 0) { toast('Please fill goal name and target amount','error'); return; }
+
+  userData.goals.push({ id:'g'+Date.now(), name, targetAmt:target, currentAmt:current, targetDate:date, icon, status:'on_track' });
+  Auth.saveUserData(currentUser.id, userData);
+
+  hideModalEl('goal-modal');
+  document.getElementById('goal-name').value=''; document.getElementById('goal-target').value=''; document.getElementById('goal-current').value='0'; document.getElementById('goal-icon').value='';
+  toast(`Goal "${name}" created!`, 'success');
+  renderGoals(); renderOverview();
+}
+
+/* ════ LOGOUT ═════════════════════════════════════════════ */
+function doLogout() {
+  Auth.logout();
+  toast('Signed out successfully', 'info');
+  setTimeout(() => window.location.href = 'login.html', 500);
+}
+</script>
+<script src="chatbot.js"></script>
+</body>
+</html>

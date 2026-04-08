@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>/* RupeeWise Dark Mode — no-flash */(function(){try{var d=localStorage.getItem('rw_dark_mode'),p=window.matchMedia('(prefers-color-scheme:dark)').matches;if(d==='true'||(d===null&&p))document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();</script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Learn Finance — RupeeWise</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ═══ NAVBAR ════════════════════════════════════════════ -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+          <polyline points="16 7 22 7 22 13"/>
+        </svg>
+      </div>
+      RupeeWise
+    </a>
+    <div class="nav-links">
+      <a href="index.html"  class="nav-link" data-page="index.html">Home</a>
+      <a href="stocks.html" class="nav-link" data-page="stocks.html">📈 Stocks</a>
+      <a href="learn.html"  class="nav-link" data-page="learn.html">🎓 Learn</a>
+      <a href="expense.html" class="nav-link" data-page="expense.html">💸 Expense</a>
+      <a href="trading.html" class="nav-link" data-page="trading.html">🎮 Trade</a>
+    </div>
+    <div class="nav-actions">
+      <button class="dark-toggle" onclick="toggleDarkMode()" title="Toggle dark mode">🌙</button>
+      <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">☰</button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html"  class="nav-link" data-page="index.html">🏠 Home</a>
+    <a href="stocks.html" class="nav-link" data-page="stocks.html">📈 Stocks</a>
+    <a href="learn.html"  class="nav-link" data-page="learn.html">🎓 Learn</a>
+      <a href="expense.html" class="nav-link" data-page="expense.html">💸 Expense</a>
+      <a href="trading.html" class="nav-link" data-page="trading.html">🎮 Trade</a>
+  </div>
+</nav>
+
+<!-- ═══ LEARN HEADER ══════════════════════════════════════ -->
+<div class="learn-header">
+  <div class="container">
+    <h1>🎓 Finance Quiz</h1>
+    <p>Test your knowledge — SIP, Mutual Funds, Stocks, Markets & more</p>
+  </div>
+</div>
+
+<!-- ═══ PAGE BODY ══════════════════════════════════════════ -->
+<div class="page-body">
+  <div class="container">
+
+    <!-- ── CATEGORY SELECTION ── -->
+    <div id="category-screen">
+      <div style="text-align:center;margin-bottom:28px" class="fade-up">
+        <h2 style="font-size:1.4rem;margin-bottom:8px">Choose a Category</h2>
+        <p style="color:var(--text-secondary)">Select a topic to start your quiz</p>
+      </div>
+      <div class="categories-grid fade-up d1" id="categories-grid">
+        <!-- Populated by JS -->
+      </div>
+      <div style="text-align:center;margin-top:8px" class="fade-up d2">
+        <button class="btn btn-primary btn-lg" onclick="startQuiz('all')">
+          🎲 Random Mix (All Topics)
+        </button>
+      </div>
+    </div>
+
+    <!-- ── QUIZ SCREEN ── -->
+    <div id="quiz-screen" class="hide">
+
+      <!-- Score Bar -->
+      <div class="score-bar fade-up" id="score-bar">
+        <div>
+          <div class="score-label">Score</div>
+          <div class="score-value" id="score-display">0</div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+        <div style="text-align:right">
+          <div class="score-label">Question</div>
+          <div class="score-value" id="q-counter" style="font-size:1rem">1 / 15</div>
+        </div>
+      </div>
+
+      <!-- Question Card -->
+      <div class="question-card fade-up d1" id="question-card">
+        <div class="question-meta">
+          <div class="question-number" id="q-number">Question 1 of 15</div>
+          <div class="question-category" id="q-category">
+            <span class="badge badge-blue">📈 Stocks</span>
+          </div>
+        </div>
+
+        <div class="question-text" id="q-text">
+          What does SIP stand for?
+        </div>
+
+        <div class="options-list" id="options-list">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Result Feedback -->
+        <div id="result-feedback" class="hide"></div>
+
+        <!-- Explanation -->
+        <div class="explanation hide" id="explanation">
+          <strong>Explanation:</strong> <span id="explanation-text"></span>
+        </div>
+
+        <!-- Question dots -->
+        <div class="question-dots" id="question-dots" style="justify-content:center;margin:20px 0 0"></div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="question-nav mt-16" style="max-width:720px;margin:16px auto 0">
+        <button class="btn btn-ghost" onclick="skipQuestion()">Skip →</button>
+        <button class="btn btn-primary hide" id="next-btn" onclick="nextQuestion()">
+          Next Question →
+        </button>
+        <button class="btn btn-primary hide" id="finish-btn" onclick="showResult()">
+          🏆 See Results
+        </button>
+      </div>
+
+      <!-- Quit -->
+      <div style="text-align:center;margin-top:16px">
+        <button class="btn btn-ghost text-sm" onclick="confirmQuit()">← Back to Categories</button>
+      </div>
+
+    </div><!-- /quiz-screen -->
+
+    <!-- ── RESULT SCREEN ── -->
+    <div id="result-screen" class="hide">
+      <div class="result-card">
+        <div class="result-trophy" id="result-trophy">🏆</div>
+        <h2 id="result-title">Excellent!</h2>
+        <p id="result-subtitle">You really know your finance!</p>
+        <div class="result-score-big" id="result-score-big">12/15</div>
+        <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:16px" id="result-accuracy">Accuracy: 80%</div>
+        <div class="result-breakdown">
+          <div class="result-item">
+            <label>✅ Correct</label>
+            <span class="text-green" id="result-correct">12</span>
+          </div>
+          <div class="result-item">
+            <label>❌ Wrong</label>
+            <span class="text-red" id="result-wrong">2</span>
+          </div>
+          <div class="result-item">
+            <label>⏩ Skipped</label>
+            <span style="color:var(--amber)" id="result-skipped">1</span>
+          </div>
+          <div class="result-item">
+            <label>🎯 Score</label>
+            <span class="text-green" id="result-points">60 pts</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+          <button class="btn btn-primary btn-lg w-full" onclick="restartSameCategory()">🔄 Try Again</button>
+          <button class="btn btn-outline w-full" onclick="backToCategories()">← All Categories</button>
+          <a href="stocks.html" class="btn btn-ghost w-full" style="justify-content:center">📈 Explore Stocks</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /page-body -->
+
+<div id="toast-container"></div>
+
+<script src="auth.js"></script>
+<script src="script.js"></script>
+<script>
+/**
+ * learn.html — MCQ Finance Quiz Engine
+ * Full question bank with 60 questions across 6 categories.
+ * Tracks score, shows explanations, navigation dots.
+ */
+
+// ══════════════════════════════════════════════════════════
+// QUESTION BANK — 60 Questions, 6 Categories
+// ══════════════════════════════════════════════════════════
+const QUESTION_BANK = [
+
+  // ── CATEGORY: SIP ──────────────────────────────────────
+  {
+    category: 'SIP', icon: '🔄',
+    text: 'What does SIP stand for?',
+    options: ['Systematic Investment Plan','Stock Investment Portfolio','Secure Interest Plan','Simple Investing Protocol'],
+    correct: 0,
+    explanation: 'SIP stands for Systematic Investment Plan. It allows investors to invest a fixed amount regularly (monthly/weekly) into mutual funds.'
+  },
+  {
+    category: 'SIP', icon: '🔄',
+    text: 'What is the minimum SIP amount most platforms allow?',
+    options: ['₹100','₹500','₹1,000','₹5,000'],
+    correct: 1,
+    explanation: 'Most mutual fund houses and platforms allow SIPs starting from ₹500 per month, making investing accessible to everyone.'
+  },
+  {
+    category: 'SIP', icon: '🔄',
+    text: 'Which concept does SIP use to reduce investment risk?',
+    options: ['Compound interest','Rupee Cost Averaging','Dollar-cost hedging','Market timing'],
+    correct: 1,
+    explanation: 'SIP uses Rupee Cost Averaging — you buy more units when prices are low and fewer when high, reducing the average cost over time.'
+  },
+  {
+    category: 'SIP', icon: '🔄',
+    text: 'What happens to SIP investments during a market crash?',
+    options: ['SIP automatically stops','You buy fewer units','You buy more units at lower prices','Your money is lost'],
+    correct: 2,
+    explanation: 'During a market crash, prices fall. With SIP, the same fixed amount buys MORE units, which is actually beneficial for long-term wealth creation.'
+  },
+  {
+    category: 'SIP', icon: '🔄',
+    text: 'SIP investments in Equity Mutual Funds are recommended for:',
+    options: ['Less than 1 year','1-2 years','3-5 years or more','Only for retirement'],
+    correct: 2,
+    explanation: 'Equity SIPs work best over 3-5+ years as equity markets tend to smooth out short-term volatility and deliver superior returns over the long run.'
+  },
+  {
+    category: 'SIP', icon: '🔄',
+    text: 'What is a Step-Up SIP?',
+    options: ['SIP that stops after target reached','SIP with increasing instalment amount','SIP only for stocks','SIP with guaranteed returns'],
+    correct: 1,
+    explanation: 'A Step-Up or Top-Up SIP allows you to increase your SIP amount periodically (e.g., by 10% annually), helping build wealth faster as your income grows.'
+  },
+  {
+    category: 'SIP', icon: '🔄',
+    text: 'Which is NOT an advantage of SIP investing?',
+    options: ['Disciplined investing','Rupee cost averaging','Guaranteed returns','Flexibility to stop/pause'],
+    correct: 2,
+    explanation: 'SIP does NOT guarantee returns. Like all market-linked investments, returns depend on market performance. However, it does offer discipline, averaging, and flexibility.'
+  },
+  {
+    category: 'SIP', icon: '🔄',
+    text: 'If you invest ₹5,000/month via SIP at 12% CAGR for 10 years, approximately how much will you have?',
+    options: ['₹6 lakhs','₹11.6 lakhs','₹21 lakhs','₹60 lakhs'],
+    correct: 1,
+    explanation: 'At 12% CAGR, investing ₹5,000/month for 10 years grows to approximately ₹11.6 lakhs — demonstrating the power of compounding.'
+  },
+  {
+    category: 'SIP', icon: '🔄',
+    text: 'What does NAV mean in the context of SIP?',
+    options: ['Net Asset Value','National Asset Volume','New Average Value','Nominal Account Value'],
+    correct: 0,
+    explanation: 'NAV — Net Asset Value — is the per-unit price of a mutual fund. Your SIP buys units at the NAV on the date of investment.'
+  },
+  {
+    category: 'SIP', icon: '🔄',
+    text: 'Can you pause a SIP without penalties?',
+    options: ['No, it will be cancelled','Yes, most funds allow pausing for 1-3 months','Only once per year','Only after 5 years'],
+    correct: 1,
+    explanation: 'Most mutual fund houses allow you to pause a SIP for 1-3 months without penalties or cancelling it. This provides flexibility during financial stress.'
+  },
+
+  // ── CATEGORY: MUTUAL FUNDS ─────────────────────────────
+  {
+    category: 'Mutual Funds', icon: '📊',
+    text: 'What is a Mutual Fund?',
+    options: ['A government savings scheme','A pool of money from many investors managed by professionals','A fixed deposit at higher rates','A type of insurance policy'],
+    correct: 1,
+    explanation: 'A Mutual Fund pools money from multiple investors and invests it in stocks, bonds, or other assets, managed by a professional Fund Manager.'
+  },
+  {
+    category: 'Mutual Funds', icon: '📊',
+    text: 'What is an ELSS fund?',
+    options: ['Equity Linked Savings Scheme','Enhanced Liquid Security System','Exchange Listed Savings Stock','Electronic Large-cap Savings Scheme'],
+    correct: 0,
+    explanation: 'ELSS (Equity Linked Savings Scheme) is a mutual fund that invests primarily in equities and offers tax deduction under Section 80C (up to ₹1.5L).'
+  },
+  {
+    category: 'Mutual Funds', icon: '📊',
+    text: 'What is the lock-in period for ELSS funds?',
+    options: ['1 year','3 years','5 years','10 years'],
+    correct: 1,
+    explanation: 'ELSS funds have the shortest lock-in of 3 years among all Section 80C investment options, and they offer equity market growth potential.'
+  },
+  {
+    category: 'Mutual Funds', icon: '📊',
+    text: 'A "Large Cap" mutual fund primarily invests in:',
+    options: ['Small companies with high growth','Top 100 companies by market cap','Bonds and government securities','Real estate assets'],
+    correct: 1,
+    explanation: 'Large Cap funds invest at least 80% in the top 100 companies by market capitalisation — typically stable, well-established companies.'
+  },
+  {
+    category: 'Mutual Funds', icon: '📊',
+    text: 'What does "Direct" plan mean in a mutual fund?',
+    options: ['You invest directly without any distributor/broker','The fund invests directly in government bonds','Fund sold directly by SEBI','Same as regular plan'],
+    correct: 0,
+    explanation: 'Direct plans have lower expense ratios because there is no distributor commission. You invest directly with the AMC, keeping more returns.'
+  },
+  {
+    category: 'Mutual Funds', icon: '📊',
+    text: 'What is the Expense Ratio of a mutual fund?',
+    options: ['The tax you pay on gains','Annual fee charged by the fund for management','Brokerage on each transaction','Entry and exit load combined'],
+    correct: 1,
+    explanation: 'Expense Ratio is the annual fee (%) charged by the fund house for managing the fund. Lower expense ratio = more returns for investors.'
+  },
+  {
+    category: 'Mutual Funds', icon: '📊',
+    text: 'What is Exit Load in a mutual fund?',
+    options: ['Fee paid when investing','Fee charged when redeeming before a specified period','Annual maintenance charge','GST on fund returns'],
+    correct: 1,
+    explanation: 'Exit Load is a small fee (e.g., 1%) charged when you redeem units before a specified period (usually 1 year). It discourages frequent trading.'
+  },
+  {
+    category: 'Mutual Funds', icon: '📊',
+    text: 'What regulates mutual funds in India?',
+    options: ['RBI','SEBI','IRDAI','NABARD'],
+    correct: 1,
+    explanation: 'SEBI (Securities and Exchange Board of India) regulates mutual funds in India, ensuring investor protection and market fairness.'
+  },
+  {
+    category: 'Mutual Funds', icon: '📊',
+    text: 'Which mutual fund category is most suitable for very short-term parking of money?',
+    options: ['Small Cap Fund','Liquid Fund','Infrastructure Fund','Mid Cap Fund'],
+    correct: 1,
+    explanation: 'Liquid Funds invest in short-term instruments (maturity up to 91 days). They are suitable for parking emergency funds or very short-term money.'
+  },
+  {
+    category: 'Mutual Funds', icon: '📊',
+    text: 'What is a Fund of Funds (FoF)?',
+    options: ['Fund that invests in other mutual funds','Fund for HNIs only','Government-backed fund','Fund investing only in gold'],
+    correct: 0,
+    explanation: 'A Fund of Funds (FoF) is a mutual fund that invests in other mutual funds rather than directly in stocks or bonds.'
+  },
+
+  // ── CATEGORY: STOCK MARKET ─────────────────────────────
+  {
+    category: 'Stock Market', icon: '📈',
+    text: 'What is a stock/share?',
+    options: ['A loan given to a company','Ownership stake in a company','A government bond','A fixed deposit certificate'],
+    correct: 1,
+    explanation: 'A stock (or share) represents a unit of ownership in a company. Buying shares makes you a part-owner (shareholder) of that company.'
+  },
+  {
+    category: 'Stock Market', icon: '📈',
+    text: 'What does BSE stand for?',
+    options: ['Bombay Stock Exchange','Business Stock Entity','Banking Securities Exchange','Bureau of Stock Evaluation'],
+    correct: 0,
+    explanation: 'BSE — Bombay Stock Exchange — is Asia\'s oldest stock exchange, established in 1875. It is now officially called BSE Ltd.'
+  },
+  {
+    category: 'Stock Market', icon: '📈',
+    text: 'NIFTY 50 represents:',
+    options: ['50 richest Indians','Top 50 stocks on NSE by market cap','Government bond index','Top 50 mutual funds'],
+    correct: 1,
+    explanation: 'NIFTY 50 is a stock market index comprising the top 50 stocks listed on the NSE (National Stock Exchange), representing ~65% of the float market cap.'
+  },
+  {
+    category: 'Stock Market', icon: '📈',
+    text: 'What is a Bull Market?',
+    options: ['Market dominated by aggressive traders','Period of rising stock prices','Market crash','Market controlled by large institutions'],
+    correct: 1,
+    explanation: 'A Bull Market is a period when stock prices are rising or expected to rise — typically when the market is up 20%+ from recent lows.'
+  },
+  {
+    category: 'Stock Market', icon: '📈',
+    text: 'What is a Dividend?',
+    options: ['Profit you make by selling shares','Share of company profits paid to shareholders','Tax on investment gains','Bonus shares issued by a company'],
+    correct: 1,
+    explanation: 'A Dividend is a distribution of a portion of company profits to its shareholders, usually paid quarterly or annually.'
+  },
+  {
+    category: 'Stock Market', icon: '📈',
+    text: 'What does P/E Ratio measure?',
+    options: ['Profit to Expense ratio','Price to Earnings ratio — how much investors pay per ₹1 of earnings','Portfolio Efficiency','Price to Employee ratio'],
+    correct: 1,
+    explanation: 'P/E Ratio = Stock Price ÷ Earnings Per Share. It shows how much investors are willing to pay for each rupee of earnings. Lower P/E may mean undervalued.'
+  },
+  {
+    category: 'Stock Market', icon: '📈',
+    text: 'What is a Bear Market?',
+    options: ['Market rising above 20%','Market declining 20%+ from its peak','Any falling market','A market for commodity trading'],
+    correct: 1,
+    explanation: 'A Bear Market is when stock prices fall 20% or more from their recent highs, often accompanied by pessimism and economic downturn.'
+  },
+  {
+    category: 'Stock Market', icon: '📈',
+    text: 'What is Market Capitalisation?',
+    options: ['Total debt of a company','Total value of a company\'s outstanding shares','Annual revenue of a company','Number of shares × face value'],
+    correct: 1,
+    explanation: 'Market Cap = Current Stock Price × Total Outstanding Shares. It represents the total market value of a company. E.g., if price is ₹100 and shares = 1 crore, Market Cap = ₹100 Cr.'
+  },
+  {
+    category: 'Stock Market', icon: '📈',
+    text: 'What is an IPO?',
+    options: ['Intra-day Purchase Order','Initial Public Offering — first sale of shares to public','Internal Portfolio Optimisation','Index Price Overview'],
+    correct: 1,
+    explanation: 'An IPO (Initial Public Offering) is when a private company first sells its shares to the public, becoming a publicly listed company.'
+  },
+  {
+    category: 'Stock Market', icon: '📈',
+    text: 'What does SENSEX track?',
+    options: ['Top 50 NSE stocks','Top 30 BSE stocks','All listed stocks in India','Gold and commodity prices'],
+    correct: 1,
+    explanation: 'SENSEX (BSE Sensitive Index) tracks the performance of the top 30 well-established companies listed on the BSE.'
+  },
+
+  // ── CATEGORY: BONDS & FIXED INCOME ────────────────────
+  {
+    category: 'Bonds & Debt', icon: '🏛️',
+    text: 'What is a Bond?',
+    options: ['A type of stock that pays dividends','A loan you give to a company or government that pays interest','A type of savings account','A commodity derivative'],
+    correct: 1,
+    explanation: 'A Bond is essentially a loan made by the investor to the borrower (company or government). The borrower pays interest (coupon) and returns the principal at maturity.'
+  },
+  {
+    category: 'Bonds & Debt', icon: '🏛️',
+    text: 'What is the relationship between bond prices and interest rates?',
+    options: ['They move in the same direction','They are unrelated','They move in opposite directions','They depend on the stock market'],
+    correct: 2,
+    explanation: 'Bond prices and interest rates have an inverse relationship. When interest rates rise, bond prices fall (because old bonds with lower rates become less attractive).'
+  },
+  {
+    category: 'Bonds & Debt', icon: '🏛️',
+    text: 'What is a G-Sec (Government Security)?',
+    options: ['Security at government buildings','Bonds issued by the Government of India','Insurance provided by government','Government-approved stocks'],
+    correct: 1,
+    explanation: 'G-Secs are debt instruments issued by the Government of India to fund its expenses. They are considered risk-free as they are backed by the government.'
+  },
+  {
+    category: 'Bonds & Debt', icon: '🏛️',
+    text: 'What does "Yield to Maturity" (YTM) of a bond mean?',
+    options: ['Annual coupon rate','Total return if bond held until maturity','Tax rate on bond interest','Bond credit rating'],
+    correct: 1,
+    explanation: 'YTM is the total return anticipated if the bond is held until it matures. It considers coupon payments and any capital gain/loss if bought at a premium/discount.'
+  },
+  {
+    category: 'Bonds & Debt', icon: '🏛️',
+    text: 'What is a Debenture?',
+    options: ['Government bond','Corporate bond not backed by specific assets','A type of equity share','Insurance bond'],
+    correct: 1,
+    explanation: 'A Debenture is a type of unsecured corporate bond — not backed by specific collateral but by the general creditworthiness of the issuing company.'
+  },
+  {
+    category: 'Bonds & Debt', icon: '🏛️',
+    text: 'Which is considered the safest investment?',
+    options: ['Small cap stocks','Sector mutual funds','Government Bonds (G-Secs)','Cryptocurrency'],
+    correct: 2,
+    explanation: 'Government Bonds (G-Secs) are considered the safest investments as they are backed by sovereign guarantee — the Government of India promises to repay.'
+  },
+  {
+    category: 'Bonds & Debt', icon: '🏛️',
+    text: 'What is a Credit Rating for bonds?',
+    options: ['How many bonds a company has issued','Assessment of the borrower\'s ability to repay','Bond interest payment history','Face value of the bond'],
+    correct: 1,
+    explanation: 'Credit ratings (AAA, AA, BBB, etc.) by agencies like CRISIL and ICRA assess the probability that a bond issuer will repay principal and interest on time.'
+  },
+  {
+    category: 'Bonds & Debt', icon: '🏛️',
+    text: 'What is Duration of a bond?',
+    options: ['Time until maturity','Sensitivity of bond price to interest rate changes','Annual interest payment','Number of coupon payments'],
+    correct: 1,
+    explanation: 'Duration measures a bond\'s sensitivity to interest rate changes. Higher duration = greater price impact when rates change. It is measured in years.'
+  },
+  {
+    category: 'Bonds & Debt', icon: '🏛️',
+    text: 'PPF (Public Provident Fund) primarily invests your money in:',
+    options: ['Stock market','Government securities','Real estate','Corporate bonds only'],
+    correct: 1,
+    explanation: 'PPF is a government-backed savings scheme where your money is invested in government securities. It offers tax-free returns and sovereign backing.'
+  },
+  {
+    category: 'Bonds & Debt', icon: '🏛️',
+    text: 'What is the current PPF lock-in period?',
+    options: ['3 years','5 years','10 years','15 years'],
+    correct: 3,
+    explanation: 'PPF has a 15-year lock-in period (with partial withdrawals possible after 7 years). This long horizon helps in wealth creation through compounding.'
+  },
+
+  // ── CATEGORY: TAXATION ────────────────────────────────
+  {
+    category: 'Taxation', icon: '🧾',
+    text: 'LTCG on equity mutual funds above ₹1 lakh is taxed at:',
+    options: ['5%','10%','15%','20%'],
+    correct: 1,
+    explanation: 'Long-Term Capital Gains (LTCG) on equity mutual funds (held >1 year) exceeding ₹1 lakh are taxed at 10% without indexation benefit.'
+  },
+  {
+    category: 'Taxation', icon: '🧾',
+    text: 'STCG on equity investments is taxed at:',
+    options: ['10%','15%','20%','As per income slab'],
+    correct: 1,
+    explanation: 'Short-Term Capital Gains (STCG) on equity (held ≤1 year) are taxed at flat 15%, regardless of your income tax slab.'
+  },
+  {
+    category: 'Taxation', icon: '🧾',
+    text: 'Under which section of Income Tax Act can you claim deduction for ELSS investment?',
+    options: ['Section 80C','Section 80D','Section 24','Section 10(14)'],
+    correct: 0,
+    explanation: 'ELSS investments qualify for deduction under Section 80C of the Income Tax Act, up to a maximum of ₹1.5 lakh per financial year.'
+  },
+  {
+    category: 'Taxation', icon: '🧾',
+    text: 'Dividend income from stocks is taxable:',
+    options: ['Always tax-free','Exempt up to ₹10 lakh','Added to income and taxed as per slab','Flat 10% regardless of amount'],
+    correct: 2,
+    explanation: 'Since 2020-21, dividend income is added to total income and taxed as per the investor\'s income tax slab (not the DDT paid by company).'
+  },
+  {
+    category: 'Taxation', icon: '🧾',
+    text: 'What is Securities Transaction Tax (STT)?',
+    options: ['Tax on mutual fund returns','Tax levied on buying/selling of securities like stocks','GST on brokerage','TDS on dividends'],
+    correct: 1,
+    explanation: 'STT is a direct tax levied at the point of transaction when you buy/sell listed securities. It is automatically deducted by exchanges.'
+  },
+  {
+    category: 'Taxation', icon: '🧾',
+    text: 'How long must you hold equity shares for gains to qualify as Long-Term?',
+    options: ['6 months','12 months (1 year)','24 months','36 months'],
+    correct: 1,
+    explanation: 'For equity shares listed on stock exchanges, the holding period for Long-Term Capital Gains (LTCG) is more than 12 months (1 year).'
+  },
+  {
+    category: 'Taxation', icon: '🧾',
+    text: 'What is TDS in the context of investments?',
+    options: ['Tax Deducted at Source','Total Dividend Scheme','Transfer of Debt Securities','Tax on Derivative Securities'],
+    correct: 0,
+    explanation: 'TDS (Tax Deducted at Source) means tax is deducted by the payer before payment reaches you. E.g., on FD interest exceeding ₹40,000/year.'
+  },
+  {
+    category: 'Taxation', icon: '🧾',
+    text: 'Capital Loss from selling stocks can be set off against:',
+    options: ['Salary income','Capital Gains income only','Any income','Cannot be set off at all'],
+    correct: 1,
+    explanation: 'Capital losses can only be set off against Capital Gains (not salary or business income). Short-term loss can offset both STCG and LTCG; long-term loss only against LTCG.'
+  },
+  {
+    category: 'Taxation', icon: '🧾',
+    text: 'Gains from Debt Mutual Funds held for more than 3 years are called:',
+    options: ['STCG taxed at 30%','LTCG with indexation benefit taxed at 20%','Tax-free gains','STCG taxed at 15%'],
+    correct: 1,
+    explanation: 'Debt fund gains held >3 years are LTCG and were taxed at 20% with indexation benefit (inflation-adjusted). Note: Budget 2023 changed this for funds invested after Apr 2023.'
+  },
+  {
+    category: 'Taxation', icon: '🧾',
+    text: 'What is Indexation in capital gains?',
+    options: ['Adjusting cost of purchase for inflation to reduce taxable gain','A stock market index strategy','The process of listing an IPO','Calculating dividend yield'],
+    correct: 0,
+    explanation: 'Indexation adjusts your purchase cost using the Cost Inflation Index (CII), reducing the taxable capital gain. It applies to certain long-term investments like debt funds and property.'
+  },
+
+  // ── CATEGORY: PERSONAL FINANCE ────────────────────────
+  {
+    category: 'Personal Finance', icon: '💡',
+    text: 'What is the 50-30-20 rule in personal finance?',
+    options: ['50% stocks, 30% bonds, 20% cash','50% needs, 30% wants, 20% savings/investments','50% in equity, 30% in real estate, 20% in gold','Pay 50% tax, save 30%, spend 20%'],
+    correct: 1,
+    explanation: 'The 50-30-20 rule: Spend 50% of take-home pay on needs (rent, food), 30% on wants (entertainment, dining), and save/invest 20%.'
+  },
+  {
+    category: 'Personal Finance', icon: '💡',
+    text: 'What is an Emergency Fund?',
+    options: ['Money kept for luxury purchases','3-6 months of living expenses kept in liquid assets','A mutual fund category','Insurance payout fund'],
+    correct: 1,
+    explanation: 'An Emergency Fund is 3-6 months of monthly expenses kept in liquid assets (savings account, liquid fund). It protects you from unexpected job loss, medical expenses, etc.'
+  },
+  {
+    category: 'Personal Finance', icon: '💡',
+    text: 'What does CIBIL score measure?',
+    options: ['Investment performance','Creditworthiness — ability to repay loans','Mutual fund rating','Stock volatility'],
+    correct: 1,
+    explanation: 'CIBIL Score (300-900) measures creditworthiness based on your credit history. A score above 750 is considered good and helps in getting loans at lower interest rates.'
+  },
+  {
+    category: 'Personal Finance', icon: '💡',
+    text: 'What is compounding in finance?',
+    options: ['Mixing stocks and bonds','Earning interest on interest — exponential growth over time','Daily settlement of trades','Averaging down a loss position'],
+    correct: 1,
+    explanation: 'Compounding means earning returns not just on your principal but also on accumulated interest/returns. Einstein called it the "eighth wonder of the world."'
+  },
+  {
+    category: 'Personal Finance', icon: '💡',
+    text: 'What is Inflation risk in investing?',
+    options: ['Risk of stock prices falling','Risk that investment returns may not keep up with rising prices','Risk of bank failure','Risk of broker default'],
+    correct: 1,
+    explanation: 'Inflation risk is when your investment returns are lower than the inflation rate, causing a reduction in real purchasing power despite nominal gains.'
+  },
+  {
+    category: 'Personal Finance', icon: '💡',
+    text: 'What is Asset Allocation?',
+    options: ['Choosing a broker','Distribution of investments across different asset classes (equity, debt, gold, etc.)','A type of mutual fund','Government scheme for asset purchase'],
+    correct: 1,
+    explanation: 'Asset Allocation is distributing your portfolio across different asset classes to balance risk and return based on your goals, time horizon, and risk tolerance.'
+  },
+  {
+    category: 'Personal Finance', icon: '💡',
+    text: 'What does KYC stand for in finance?',
+    options: ['Know Your Credit','Know Your Customer','Keep Your Capital','Key Yield Calculation'],
+    correct: 1,
+    explanation: 'KYC (Know Your Customer) is a mandatory process for financial institutions to verify identity of clients. Required for opening Demat accounts, investing in mutual funds, etc.'
+  },
+  {
+    category: 'Personal Finance', icon: '💡',
+    text: 'What is Rebalancing in a portfolio?',
+    options: ['Selling all investments','Restoring portfolio to target asset allocation after market movements','Borrowing to invest more','Adding only one type of asset'],
+    correct: 1,
+    explanation: 'Rebalancing means periodically adjusting your portfolio back to the target allocation. E.g., if equity has grown to 70% from target 60%, you sell some equity and buy more debt.'
+  },
+  {
+    category: 'Personal Finance', icon: '💡',
+    text: 'What is the Rule of 72?',
+    options: ['Invest 72% in equity','Divide 72 by annual return rate to estimate years to double money','Save for 72 months before investing','A tax rule for senior citizens'],
+    correct: 1,
+    explanation: 'The Rule of 72: Divide 72 by your annual return rate to estimate how many years it takes to double your money. E.g., at 12% return: 72÷12 = 6 years to double.'
+  },
+  {
+    category: 'Personal Finance', icon: '💡',
+    text: 'What is a Demat Account?',
+    options: ['Savings account for mutual funds','Electronic account that holds your shares and securities in digital form','Tax-saving account','Account for daily trading only'],
+    correct: 1,
+    explanation: 'A Demat (Dematerialised) Account holds your shares and securities in electronic form, eliminating physical share certificates. Required for trading stocks in India.'
+  },
+];
+
+// ── CATEGORIES ────────────────────────────────────────────
+const CATEGORIES = [
+  { id: 'SIP',             icon: '🔄', title: 'SIP',              desc: '10 questions on Systematic Investment Plans' },
+  { id: 'Mutual Funds',   icon: '📊', title: 'Mutual Funds',     desc: '10 questions on MFs, NAV, and plans' },
+  { id: 'Stock Market',   icon: '📈', title: 'Stock Market',     desc: '10 questions on stocks, indices & IPOs' },
+  { id: 'Bonds & Debt',   icon: '🏛️', title: 'Bonds & Debt',    desc: '10 questions on G-Secs, PPF & bonds' },
+  { id: 'Taxation',       icon: '🧾', title: 'Tax on Investments',desc: '10 questions on LTCG, STCG & ELSS' },
+  { id: 'Personal Finance',icon: '💡',title: 'Personal Finance', desc: '10 questions on savings, compounding & more' },
+];
+
+// ── STATE ─────────────────────────────────────────────────
+let state = {
+  questions:    [],   // current quiz questions (shuffled)
+  current:      0,    // current question index
+  answers:      [],   // 'correct' | 'wrong' | 'skipped' | null
+  score:        0,
+  category:     'all',
+};
+
+// ── INIT ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  renderCategories();
+});
+
+function renderCategories() {
+  const grid = document.getElementById('categories-grid');
+  grid.innerHTML = CATEGORIES.map(c => `
+    <div class="category-card fade-up" onclick="startQuiz('${c.id}')">
+      <div class="category-icon">${c.icon}</div>
+      <h3>${c.title}</h3>
+      <p>${c.desc}</p>
+    </div>
+  `).join('');
+}
+
+// ── START QUIZ ────────────────────────────────────────────
+function startQuiz(categoryId) {
+  state.category = categoryId;
+
+  // Filter + shuffle questions
+  let pool = categoryId === 'all'
+    ? [...QUESTION_BANK]
+    : QUESTION_BANK.filter(q => q.category === categoryId);
+
+  // Shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  // Pick 15 questions (or fewer if category has less)
+  state.questions = pool.slice(0, 15);
+  state.current   = 0;
+  state.answers   = new Array(state.questions.length).fill(null);
+  state.score     = 0;
+
+  // Show quiz screen
+  document.getElementById('category-screen').classList.add('hide');
+  document.getElementById('result-screen').classList.add('hide');
+  document.getElementById('quiz-screen').classList.remove('hide');
+
+  renderQuestion();
+}
+
+// ── RENDER QUESTION ───────────────────────────────────────
+function renderQuestion() {
+  const q     = state.questions[state.current];
+  const total = state.questions.length;
+  const idx   = state.current;
+
+  // Header
+  document.getElementById('q-number').textContent  = `Question ${idx + 1} of ${total}`;
+  document.getElementById('q-counter').textContent = `${idx + 1} / ${total}`;
+  document.getElementById('q-category').innerHTML  = `<span class="badge badge-blue">${q.icon} ${q.category}</span>`;
+  document.getElementById('q-text').textContent    = q.text;
+
+  // Progress bar
+  document.getElementById('progress-fill').style.width = ((idx / total) * 100) + '%';
+
+  // Score
+  document.getElementById('score-display').textContent = state.score;
+
+  // Options
+  const letters = ['A','B','C','D'];
+  document.getElementById('options-list').innerHTML = q.options.map((opt, i) => `
+    <button class="option-btn" onclick="selectAnswer(${i})" id="opt-${i}">
+      <span class="option-letter">${letters[i]}</span>
+      ${opt}
+    </button>
+  `).join('');
+
+  // Reset feedback
+  document.getElementById('result-feedback').classList.add('hide');
+  document.getElementById('result-feedback').innerHTML = '';
+  document.getElementById('explanation').classList.add('hide');
+  document.getElementById('next-btn').classList.add('hide');
+  document.getElementById('finish-btn').classList.add('hide');
+
+  // Navigation dots
+  renderDots();
+
+  // Restore answer state if already answered
+  if (state.answers[idx] !== null) showAnswerState(idx);
+}
+
+// ── SELECT ANSWER ─────────────────────────────────────────
+function selectAnswer(chosenIdx) {
+  if (state.answers[state.current] !== null) return; // already answered
+
+  const q = state.questions[state.current];
+  const isCorrect = chosenIdx === q.correct;
+
+  // Record answer
+  state.answers[state.current] = isCorrect ? 'correct' : 'wrong';
+  if (isCorrect) state.score += 5; // 5 pts per correct
+
+  showAnswerState(state.current, chosenIdx);
+}
+
+function showAnswerState(qIdx, chosen = null) {
+  const q = state.questions[qIdx];
+  const ans = state.answers[qIdx];
+  if (ans === null) return;
+
+  // Disable all options and highlight
+  const optBtns = document.querySelectorAll('.option-btn');
+  optBtns.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.correct) {
+      btn.classList.add(ans === 'skipped' ? 'revealed' : 'correct');
+    } else if (chosen !== null && i === chosen && chosen !== q.correct) {
+      btn.classList.add('wrong');
+    }
+  });
+
+  // Result banner
+  const fb = document.getElementById('result-feedback');
+  fb.classList.remove('hide');
+  if (ans === 'correct') {
+    fb.innerHTML = '<div class="result-banner correct">✅ Correct! +5 points</div>';
+  } else if (ans === 'wrong') {
+    fb.innerHTML = '<div class="result-banner wrong">❌ Incorrect! The correct answer is highlighted in green.</div>';
+  } else {
+    fb.innerHTML = '<div class="result-banner" style="background:var(--bg-hover);border:1px solid var(--border);color:var(--text-secondary)">⏩ Skipped</div>';
+  }
+
+  // Explanation
+  const expEl = document.getElementById('explanation');
+  expEl.classList.remove('hide');
+  document.getElementById('explanation-text').textContent = q.explanation;
+
+  // Score display
+  document.getElementById('score-display').textContent = state.score;
+
+  // Show Next / Finish button
+  const isLast = state.current === state.questions.length - 1;
+  document.getElementById('next-btn').classList.toggle('hide', isLast);
+  document.getElementById('finish-btn').classList.toggle('hide', !isLast);
+
+  // Update dot
+  renderDots();
+}
+
+// ── SKIP QUESTION ─────────────────────────────────────────
+function skipQuestion() {
+  if (state.answers[state.current] !== null) {
+    nextQuestion();
+    return;
+  }
+  state.answers[state.current] = 'skipped';
+  showAnswerState(state.current);
+}
+
+// ── NEXT QUESTION ─────────────────────────────────────────
+function nextQuestion() {
+  if (state.current < state.questions.length - 1) {
+    state.current++;
+    renderQuestion();
+    // Scroll to top of card
+    document.getElementById('question-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    showResult();
+  }
+}
+
+// ── NAVIGATION DOTS ───────────────────────────────────────
+function renderDots() {
+  const container = document.getElementById('question-dots');
+  container.innerHTML = state.answers.map((ans, i) => {
+    let cls = '';
+    if (i === state.current) cls = 'current';
+    else if (ans === 'correct') cls = 'correct';
+    else if (ans === 'wrong')   cls = 'wrong';
+    else if (ans === 'skipped') cls = 'skipped';
+    return `<div class="q-dot ${cls}" onclick="jumpToQuestion(${i})" title="Q${i+1}"></div>`;
+  }).join('');
+}
+
+function jumpToQuestion(idx) {
+  state.current = idx;
+  renderQuestion();
+}
+
+// ── SHOW RESULT ───────────────────────────────────────────
+function showResult() {
+  const total   = state.questions.length;
+  const correct = state.answers.filter(a => a === 'correct').length;
+  const wrong   = state.answers.filter(a => a === 'wrong').length;
+  const skipped = state.answers.filter(a => a === 'skipped' || a === null).length;
+  const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+  // Save quiz result to user account
+  if (typeof Auth !== 'undefined' && Auth.isLoggedIn()) {
+    const session = Auth.getSession();
+    Auth.saveQuizResult(session.user.id, {
+      category: state.category,
+      total, correct, wrong, skipped, score: state.score, accuracy,
+    });
+  }
+
+  const points  = state.score;
+
+  // Trophy + message
+  let trophy, title, subtitle;
+  if (accuracy >= 90) { trophy = '🏆'; title = 'Outstanding!'; subtitle = 'You\'re a finance expert!'; }
+  else if (accuracy >= 70) { trophy = '🥇'; title = 'Excellent!'; subtitle = 'You really know your finance!'; }
+  else if (accuracy >= 50) { trophy = '🥈'; title = 'Good Job!'; subtitle = 'Keep practicing to improve!'; }
+  else { trophy = '📚'; title = 'Keep Learning!'; subtitle = 'Review the explanations and try again!'; }
+
+  document.getElementById('result-trophy').textContent = trophy;
+  document.getElementById('result-title').textContent  = title;
+  document.getElementById('result-subtitle').textContent = subtitle;
+  document.getElementById('result-score-big').textContent = `${correct}/${total}`;
+  document.getElementById('result-accuracy').textContent  = `Accuracy: ${accuracy}%`;
+  document.getElementById('result-correct').textContent  = correct;
+  document.getElementById('result-wrong').textContent    = wrong;
+  document.getElementById('result-skipped').textContent  = skipped;
+  document.getElementById('result-points').textContent   = points + ' pts';
+
+  document.getElementById('quiz-screen').classList.add('hide');
+  document.getElementById('result-screen').classList.remove('hide');
+
+  if (accuracy === 100) toast('🎉 Perfect score! Incredible!', 'success', 5000);
+  else if (accuracy >= 70) toast('🎊 Great performance!', 'success');
+}
+
+// ── RESTART / BACK ────────────────────────────────────────
+function restartSameCategory() {
+  startQuiz(state.category);
+}
+
+function backToCategories() {
+  document.getElementById('result-screen').classList.add('hide');
+  document.getElementById('quiz-screen').classList.add('hide');
+  document.getElementById('category-screen').classList.remove('hide');
+}
+
+function confirmQuit() {
+  const answered = state.answers.filter(a => a !== null).length;
+  if (answered === 0 || confirm('Your progress will be lost. Go back to categories?')) {
+    backToCategories();
+  }
+}
+</script>
+<script src="chatbot.js"></script>
+</body>
+</html>
