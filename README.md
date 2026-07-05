@@ -6,8 +6,8 @@
 
 **A complete Indian fintech platform — Live Stocks, AI Finance Assistant, Paper Trading, Expense Tracker & more!**
 
-[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Visit%20Now-22c55e?style=for-the-badge)](https://rupeewise.vercel.app)
-[![GitHub](https://img.shields.io/badge/GitHub-Source%20Code-181717?style=for-the-badge&logo=github)](https://github.com/YOUR_USERNAME/rupeewise)
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Visit%20Now-22c55e?style=for-the-badge)](https://rupeewise-invest-ofpd.vercel.app/)
+[![GitHub](https://img.shields.io/badge/GitHub-Source%20Code-181717?style=for-the-badge&logo=github)](https://github.com/codewithskyies/Rupeewise-invest-)
 [![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=for-the-badge&logo=vercel)](https://vercel.com)
 
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
@@ -53,7 +53,7 @@ Inspired by Groww and Zerodha, it helps Indian beginner investors understand sto
 
 ## 🚀 Live Demo
 
-🔗 **[https://rupeewise.vercel.app](https://rupeewise.vercel.app)**
+🔗 **[https://rupeewise.vercel.app](https://rupeewise-invest-ofpd.vercel.app/)**
 
 | Credential | Value |
 |---|---|
